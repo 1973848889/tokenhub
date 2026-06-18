@@ -44,7 +44,7 @@ export default function DashboardPage() {
 
       <Row gutter={[16, 16]}>
         {[
-          { k: 'cost', title: '今日费用', v: `¥${formatCost(data.today.cost)}`, c: data.today.cost_change_rate, icon: <DollarOutlined />, color: '#1677ff' },
+          { k: 'cost', title: '今日费用', v: formatCost(data.today.cost), c: data.today.cost_change_rate, icon: <DollarOutlined />, color: '#1677ff' },
           { k: 'tokens', title: '今日Token', v: formatTokens(data.today.tokens), c: data.today.tokens_change_rate, icon: <ThunderboltOutlined />, color: '#52c41a' },
           { k: 'calls', title: '今日调用', v: formatNumber(data.today.calls), c: data.today.calls_change_rate, icon: <ApiOutlined />, color: '#faad14' },
           { k: 'budget', title: '月度预算使用', v: `${(data.month.budget_usage_rate * 100).toFixed(1)}%`, c: null, icon: <DollarOutlined />, color: '#722ed1' },

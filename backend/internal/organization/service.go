@@ -76,7 +76,7 @@ func init() {
 	s := globalService
 
 	orgID := uuid.New().String()
-	s.orgs[orgID] = &Org{ID: orgID, Name: "AI应用与治理智能平台", CreatedAt: time.Now()}
+	s.orgs[orgID] = &Org{ID: orgID, Name: "企业AI治理智能平台", CreatedAt: time.Now()}
 
 	deptIDs := []string{}
 	for _, name := range []string{"研发部", "产品部", "运营部", "数据部", "市场部"} {

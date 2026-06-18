@@ -443,7 +443,7 @@ type ModelsSettings struct { DefaultStrategy string `json:"default_strategy"`; E
 type AboutInfo struct { Version string `json:"version"`; BuildDate string `json:"build_date"`; GoVersion string `json:"go_version"`; Uptime string `json:"uptime"` }
 
 var currentSettings = SettingsResponse{
-	Organization: OrganizationSettings{Name: "AI应用与治理智能平台", Email: "admin@example.com", Plan: "专业版", Status: "active"},
+	Organization: OrganizationSettings{Name: "企业AI治理智能平台", Email: "admin@example.com", Plan: "专业版", Status: "active"},
 	Budget: BudgetSettings{OrgMonthlyBudget: 50000, DefaultKeyBudget: 100, AlertThreshold: 0.8, AutoBlockAgent: true},
 	Security: SecuritySettings{SensitiveFilterEnabled: true, PIIMaskEnabled: true, InjectionDetectEnabled: true, LogRetentionDays: 180},
 	Models: ModelsSettings{DefaultStrategy: "balanced", EnabledModels: []string{"deepseek-chat","deepseek-reasoner","qwen-max","doubao-pro-256k","glm-5","kimi-latest","glm-5-flash","qwen-plus","hunyuan-pro"}, MaxTokensPerCall: 100000},

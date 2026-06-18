@@ -12,6 +12,18 @@ export const MODEL_LIST = [
   { value: 'zhipu-glm4', label: '智谱 GLM-4 Plus', provider: 'zhipu' },
 ];
 
+export const INDUSTRY_MODEL_LIST = [
+  { value: 'medical-gpt', label: 'MedicalGPT', provider: 'medical', desc: '医学诊疗' },
+  { value: 'lawgpt', label: 'LawGPT', provider: 'legal', desc: '法律咨询' },
+  { value: 'finbert', label: 'FinBERT', provider: 'finance', desc: '金融分析' },
+  { value: 'educhat', label: 'EduChat', provider: 'education', desc: '智慧教育' },
+  { value: 'codegeex', label: 'CodeGeeX', provider: 'dev', desc: '代码生成' },
+  { value: 'biogpt', label: 'BioGPT', provider: 'medical', desc: '生物医药' },
+  { value: 'huatuogpt', label: 'HuatuoGPT', provider: 'medical', desc: '中医问诊' },
+  { value: 'lexisthai', label: 'LexisNexis AI', provider: 'legal', desc: '合同审查' },
+  { value: 'finreg-gpt', label: '金融监管大模型', provider: 'finance', desc: '监管合规' },
+];
+
 export const PROVIDER_COLORS: Record<string, string> = {
   deepseek: '#6366f1',
   qwen: '#f59e0b',
@@ -21,6 +33,11 @@ export const PROVIDER_COLORS: Record<string, string> = {
   ernie: '#8b5cf6',
   hunyuan: '#06b6d4',
   zhipu: '#f97316',
+  medical: '#ef4444',
+  legal: '#a855f7',
+  finance: '#eab308',
+  education: '#14b8a6',
+  dev: '#3b82f6',
 };
 
 export const RISK_COLORS: Record<string, string> = {

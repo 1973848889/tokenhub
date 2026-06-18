@@ -7,7 +7,7 @@ import { QueryProvider } from '@/components/QueryProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'AI应用与治理智能平台',
+  title: '企业AI治理智能平台',
   description: '中立、高效、合规的AI Token应用与治理服务',
 };
 

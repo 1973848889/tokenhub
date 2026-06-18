@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('AI治理平台 E2E', () => {
+test.describe('企业AI治理智能平台 E2E', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000');
     await page.waitForLoadState('networkidle');
@@ -37,8 +37,8 @@ test.describe('AI治理平台 E2E', () => {
 
   test('P5: 登录页可访问', async ({ page }) => {
     await page.goto('http://localhost:3000/login');
-    await expect(page.locator('text=AI应用与治理智能平台')).toBeVisible();
-    await expect(page.locator('text=AI应用与治理智能平台')).toBeVisible();
+    await expect(page.locator('text=企业AI治理智能平台')).toBeVisible();
+    await expect(page.locator('text=企业AI治理智能平台')).toBeVisible();
     await expect(page.locator('input[placeholder="邮箱"]')).toBeVisible();
     await expect(page.locator('input[placeholder="密码"]')).toBeVisible();
     await expect(page.locator('button.ant-btn-primary')).toBeVisible();

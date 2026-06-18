@@ -45,7 +45,7 @@ export default function BudgetConfigPage() {
       <Row gutter={16}>
         <Col xs={24} sm={8}><Card size="small"><Statistic title="当前计划" value={plan} /></Card></Col>
         <Col xs={24} sm={8}><Card size="small"><Statistic title="状态" value={status} /></Card></Col>
-        <Col xs={24} sm={8}><Card size="small"><Statistic title="月度预算" value={`¥${formatCost(data?.budget?.org_monthly_budget ?? 0)}`} /></Card></Col>
+        <Col xs={24} sm={8}><Card size="small"><Statistic title="月度预算" value={formatCost(data?.budget?.org_monthly_budget ?? 0)} /></Card></Col>
       </Row>
 
       <Alert message="预算配置修改后立即生效，所有Key的调用将受新规则约束" type="warning" showIcon style={{ maxWidth: 600 }} />

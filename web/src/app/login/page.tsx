@@ -50,8 +50,8 @@ export default function LoginPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <Card style={{ width: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={2} style={{ margin: 0 }}>AI应用与治理智能平台</Title>
-          <Text type="secondary">AI应用与治理智能平台</Text>
+          <Title level={2} style={{ margin: 0 }}>企业AI治理智能平台</Title>
+          <Text type="secondary">企业AI治理智能平台</Text>
         </div>
         <Form onFinish={onFinish} size="large" initialValues={{ role: 'super_admin' }}>
           <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>

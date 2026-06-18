@@ -86,7 +86,7 @@ function AgentRankingTab() {
   return (
     <>
       <Row gutter={[16, 16]}>
-        {[{ title: '活跃 Agent', value: ranking?.data?.length ?? 0, icon: <RobotOutlined />, color: '#1677ff' }, { title: '异常 Agent', value: anomalyCount, icon: <WarningOutlined />, color: anomalyCount > 0 ? '#ff4d4f' : '#52c41a' }, { title: 'Agent 总费用', value: `¥${formatCost(agentTotalCost)}`, icon: <ThunderboltOutlined />, color: '#722ed1' }, { title: '告警', value: warningCount, icon: <StopOutlined />, color: warningCount > 0 ? '#faad14' : '#52c41a' }].map((c) => (
+        {[{ title: '活跃 Agent', value: ranking?.data?.length ?? 0, icon: <RobotOutlined />, color: '#1677ff' }, { title: '异常 Agent', value: anomalyCount, icon: <WarningOutlined />, color: anomalyCount > 0 ? '#ff4d4f' : '#52c41a' }, { title: 'Agent 总费用', value: formatCost(agentTotalCost), icon: <ThunderboltOutlined />, color: '#722ed1' }, { title: '告警', value: warningCount, icon: <StopOutlined />, color: warningCount > 0 ? '#faad14' : '#52c41a' }].map((c) => (
           <Col xs={12} sm={6} key={c.title}><Card size="small"><div><Text type="secondary" style={{ fontSize: 12 }}>{c.title}</Text><div style={{ fontSize: 22, fontWeight: 700, color: c.color }}>{c.value}</div></div></Card></Col>
         ))}
       </Row>

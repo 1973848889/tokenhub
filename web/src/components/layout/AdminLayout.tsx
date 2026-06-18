@@ -27,7 +27,7 @@ const allMenuItems = [
     ],
   },
   {
-    key: 'billing-group', icon: <DollarOutlined />, label: '账单管理',
+    key: 'billing-group', icon: <DollarOutlined />, label: '运营管理',
     children: [
       { key: '/billing', icon: <FundOutlined />, label: '账单分析' },
       { key: '/budget-config', icon: <DollarOutlined />, label: '预算配置' },
@@ -36,7 +36,7 @@ const allMenuItems = [
   {
     key: 'safety-group', icon: <SafetyCertificateOutlined />, label: '安全治理',
     children: [
-      { key: '/safety', icon: <SafetyCertificateOutlined />, label: '运营安全' },
+      { key: '/safety', icon: <SafetyCertificateOutlined />, label: '安全大屏' },
       { key: '/compliance', icon: <AuditOutlined />, label: '合规报告' },
       { key: '/access-control', icon: <SafetyCertificateOutlined />, label: '安全配置' },
     ],
@@ -95,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>TH</span>
           </div>
-          {!collapsed && <Text strong style={{ fontSize: 16, whiteSpace: 'nowrap' }}>AI治理平台</Text>}
+          {!collapsed && <Text strong style={{ fontSize: 16, whiteSpace: 'nowrap' }}>企业AI治理智能平台</Text>}
         </div>
         <Menu
           mode="inline"

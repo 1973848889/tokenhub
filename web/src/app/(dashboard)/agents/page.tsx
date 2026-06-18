@@ -38,7 +38,7 @@ function RankingTab({ sortBy, setSortBy, ranking, totalCost, anomalies, setSelec
         {[
           { title: '活跃 Agent', value: ranking?.data?.length ?? 0, icon: <RobotOutlined />, color: '#1677ff' },
           { title: '异常 Agent', value: anomalyCount, icon: <WarningOutlined />, color: anomalyCount > 0 ? '#ff4d4f' : '#52c41a' },
-          { title: '总费用', value: `¥${formatCost(totalCost)}`, icon: <ThunderboltOutlined />, color: '#722ed1' },
+          { title: '总费用', value: formatCost(totalCost), icon: <ThunderboltOutlined />, color: '#722ed1' },
           { title: '告警', value: warningCount, icon: <StopOutlined />, color: warningCount > 0 ? '#faad14' : '#52c41a' },
         ].map((card) => (
           <Col xs={12} sm={6} key={card.title}><Card size="small">{/* same card style as before */}<div><Text type="secondary" style={{ fontSize: 12 }}>{card.title}</Text><div style={{ fontSize: 22, fontWeight: 700, color: card.color }}>{card.value}</div></div></Card></Col>

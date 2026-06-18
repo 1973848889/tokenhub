@@ -51,7 +51,7 @@ function UsageLedgerTab({ queryParams }: any) {
       <Row gutter={16}>
         <Col xs={12} sm={6}><Statistic title="总调用" value={formatNumber(data.summary?.total_calls ?? 0)} /></Col>
         <Col xs={12} sm={6}><Statistic title="总Token" value={formatTokens(data.summary?.total_tokens ?? 0)} /></Col>
-        <Col xs={12} sm={6}><Statistic title="总费用" value={`¥${formatCost(data.summary?.total_cost ?? 0)}`} /></Col>
+        <Col xs={12} sm={6}><Statistic title="总费用" value={formatCost(data.summary?.total_cost ?? 0)} /></Col>
         <Col xs={12} sm={6}><Statistic title="安全拦截" value={data.summary?.blocked_calls ?? 0} valueStyle={{ color: '#ff4d4f' }} /></Col>
       </Row>
       <Table style={{ marginTop: 16 }} dataSource={data.records} rowKey="date" pagination={{ pageSize: 20 }} size="small"

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, Empty } from 'antd';
 
 const placeholderPages: Record<string, { title: string; icon: string }> = {
-  'billing':     { title: '账单管理', icon: '💳' },
+  'billing':     { title: '运营管理', icon: '💳' },
   'api-keys':    { title: 'API Key 管理', icon: '🔑' },
   'models':      { title: '模型推荐', icon: '🤖' },
   'safety':      { title: '运营安全监控', icon: '🛡️' },

@@ -70,7 +70,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("AI治理平台 Gateway starting on :%d", cfg.Server.Port)
+		log.Printf("企业AI治理智能平台 Gateway starting on :%d", cfg.Server.Port)
 		log.Printf("  Health: http://localhost:%d/health", cfg.Server.Port)
 		log.Printf("  Chat:   http://localhost:%d/v1/chat/completions", cfg.Server.Port)
 		log.Printf("  WS:     ws://localhost:%d/ws/dashboard", cfg.Server.Port)
@@ -91,7 +91,7 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Shutdown error: %v", err)
 	}
-	log.Println("AI治理平台 stopped")
+	log.Println("企业AI治理智能平台 stopped")
 }
 
 func initAdapters() {
