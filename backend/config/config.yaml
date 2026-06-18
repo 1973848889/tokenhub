@@ -1,0 +1,26 @@
+server:
+  port: 8080
+  mode: debug
+
+database:
+  host: localhost
+  port: 5432
+  user: tokenhub
+  password: tokenhub
+  dbname: tokenhub
+  sslmode: disable
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+
+clickhouse:
+  addr: localhost:9000
+  database: tokenhub
+  username: default
+  password: ""
+
+jwt:
+  secret: tokenhub-dev-secret-change-in-production
+  expire_hour: 24
