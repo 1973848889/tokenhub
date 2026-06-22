@@ -23,7 +23,7 @@ export function KeyCreateModal({ open, onCancel, onSubmit, loading, initialValue
         form.setFieldsValue(initialValues);
       } else {
         form.resetFields();
-        form.setFieldsValue({ rate_limit_rpm: 60, allowed_models: MODEL_LIST.map((m) => m.value) });
+        form.setFieldsValue({ rate_limit_rpm: 60, allowed_models: MODEL_LIST.map((m) => m.value), routing_strategy: 'balanced' });
       }
     }
   }, [open, initialValues, form]);
@@ -94,6 +94,9 @@ export function KeyCreateModal({ open, onCancel, onSubmit, loading, initialValue
           <Form.Item name="rate_limit_rpm" label="频率限制" tooltip={{ title: '每分钟最大请求数', icon: <InfoCircleOutlined /> }}>
             <InputNumber min={1} max={10000} step={10} style={{ width: 140 }} addonAfter="RPM" />
           </Form.Item>
+          <Form.Item name="max_tokens_per_call" label="单次调用Token上限" tooltip={{ title: '单次调用最大Token数', icon: <InfoCircleOutlined /> }}>
+            <InputNumber min={0} max={1000000} step={10000} placeholder="不限制" style={{ width: 180 }} addonAfter="tokens" />
+          </Form.Item>
           <Form.Item name="expires_days" label="有效期 (天)" tooltip={{ title: '留空则永不过期', icon: <InfoCircleOutlined /> }}>
             <InputNumber min={1} max={3650} placeholder="永不过期" style={{ width: 140 }} addonAfter="天" />
           </Form.Item>
@@ -101,6 +104,16 @@ export function KeyCreateModal({ open, onCancel, onSubmit, loading, initialValue
 
         <Form.Item name="allowed_models" label="可用模型" tooltip={{ title: '限制此Key可调用的模型', icon: <InfoCircleOutlined /> }}>
           <Select mode="multiple" placeholder="默认全部" options={MODEL_LIST} allowClear />
+        </Form.Item>
+
+        <Form.Item name="routing_strategy" label="路由策略" initialValue="balanced">
+          <Select
+            options={[
+              { value: 'cost_first', label: '成本优先' },
+              { value: 'balanced', label: '均衡策略' },
+              { value: 'quality_first', label: '质量优先' },
+            ]}
+          />
         </Form.Item>
 
         <Form.Item name="allowed_ips" label="IP白名单" tooltip={{ title: '限制调用来源IP', icon: <InfoCircleOutlined /> }}>

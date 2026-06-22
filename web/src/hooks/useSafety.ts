@@ -46,7 +46,9 @@ export function useSafetyOverview() {
       const { data } = await apiClient.get('/api/v1/admin/safety/overview', { signal });
       return data;
     },
-    refetchInterval: 15_000,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
     placeholderData: (prev) => prev,
   });
 }
@@ -58,6 +60,7 @@ export function useSafetyLogs(params: SafetyQuery) {
       const { data } = await apiClient.get('/api/v1/admin/safety/logs', { params, signal });
       return data;
     },
-    staleTime: 10_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 }

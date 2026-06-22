@@ -43,7 +43,7 @@ export default function AgentRegisterPage() {
             { title: '部门', dataIndex: 'dept_name' },
             { title: '风险等级', dataIndex: 'risk_level', render: (v: string) => <Tag color={riskMap[v]?.color}>{riskMap[v]?.label || v}</Tag> },
             { title: '关联Key', key: 'keys', render: (_: any, r: any) => <Tag>{r.linked_key_ids?.length || 0} 个</Tag> },
-            { title: '今日费用', dataIndex: 'today_cost', render: (v: number) => <span style={{ fontWeight: 600, color: '#1677ff' }}>¥{formatCost(v)}</span> },
+            { title: '今日费用', dataIndex: 'today_cost', render: (v: number) => <span style={{ fontWeight: 600, color: '#1677ff' }}>{formatCost(v)}</span> },
             { title: '今日调用', dataIndex: 'today_calls', render: (v: number) => formatNumber(v) },
             { title: '状态', dataIndex: 'status', render: (v: string) => <Badge status={v === 'active' ? 'success' : 'warning'} text={v === 'active' ? '已激活' : '已暂停'} /> },
             {
@@ -89,7 +89,7 @@ export default function AgentRegisterPage() {
               <Descriptions.Item label="沙箱">{detailAgent.sandbox_required ? '需要' : '不需要'}</Descriptions.Item>
               <Descriptions.Item label="允许模型">{detailAgent.allowed_models?.length ? detailAgent.allowed_models.map((m: string) => <Tag key={m}>{m}</Tag>) : '全部'}</Descriptions.Item>
               <Descriptions.Item label="日预算">{detailAgent.daily_budget > 0 ? `¥${detailAgent.daily_budget}` : '无限制'}</Descriptions.Item>
-              <Descriptions.Item label="今日费用">¥{formatCost(detailAgent.today_cost)}</Descriptions.Item>
+              <Descriptions.Item label="今日费用">{formatCost(detailAgent.today_cost)}</Descriptions.Item>
               <Descriptions.Item label="今日调用">{formatNumber(detailAgent.today_calls)} 次</Descriptions.Item>
               <Descriptions.Item label="今日Token">{formatTokens(detailAgent.today_tokens)}</Descriptions.Item>
               <Descriptions.Item label="关联Key">{detailAgent.linked_key_ids?.length || 0} 个</Descriptions.Item>

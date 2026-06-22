@@ -10,7 +10,7 @@ const { Title, Text } = Typography;
 export default function ModelAggregationPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>模型聚合</h1>
+      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>模型方舟</h1>
 
       <Card title="通用大模型">
         <Space wrap>

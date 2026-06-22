@@ -202,8 +202,8 @@ function ModelComparison({ recommendations }: { recommendations: ModelRecommenda
 
         <div style={{ padding: 12, background: '#f5f5f5', borderRadius: 6, fontSize: 12 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>成本估算 (百万Token)</div>
-          <div>输入: ¥{formatCost(a.input_price)} vs ¥{formatCost(b.input_price)}</div>
-          <div>输出: ¥{formatCost(a.output_price)} vs ¥{formatCost(b.output_price)}</div>
+          <div>输入: {formatCost(a.input_price)} vs {formatCost(b.input_price)}</div>
+          <div>输出: {formatCost(a.output_price)} vs {formatCost(b.output_price)}</div>
         </div>
       </div>
     </Card>

@@ -18,22 +18,24 @@ type Org struct {
 }
 
 type Dept struct {
-	ID        string    `json:"id"`
-	OrgID     string    `json:"org_id"`
-	Name      string    `json:"name"`
-	UserCount int       `json:"user_count"`
-	CreatedAt time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	OrgID         string    `json:"org_id"`
+	Name          string    `json:"name"`
+	UserCount     int       `json:"user_count"`
+	MonthlyBudget float64   `json:"monthly_budget"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type User struct {
-	ID        string    `json:"id"`
-	OrgID     string    `json:"org_id"`
-	DeptID    string    `json:"dept_id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Role      string    `json:"role"`
-	Password  string    `json:"password"`
-	CreatedAt time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	OrgID         string    `json:"org_id"`
+	DeptID        string    `json:"dept_id"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	Role          string    `json:"role"`
+	Password      string    `json:"password"`
+	MonthlyBudget float64   `json:"monthly_budget"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type CreateOrgRequest struct{ Name string `json:"name"` }
@@ -79,20 +81,27 @@ func init() {
 	s.orgs[orgID] = &Org{ID: orgID, Name: "企业AI治理智能平台", CreatedAt: time.Now()}
 
 	deptIDs := []string{}
-	for _, name := range []string{"研发部", "产品部", "运营部", "数据部", "市场部"} {
+	budgets := []float64{50000, 30000, 20000, 25000, 15000}
+	for i, name := range []string{"研发部", "产品部", "运营部", "数据部", "市场部"} {
 		id := uuid.New().String()
 		deptIDs = append(deptIDs, id)
-		s.depts[id] = &Dept{ID: id, OrgID: orgID, Name: name, CreatedAt: time.Now()}
+		s.depts[id] = &Dept{ID: id, OrgID: orgID, Name: name, MonthlyBudget: budgets[i], CreatedAt: time.Now()}
 	}
 
-	users := []struct{ name, email, role, deptID string }{
-		{"张三", "zhangsan@example.com", "super_admin", deptIDs[0]},
-		{"李四", "lisi@example.com", "dept_admin", deptIDs[1]},
-		{"王五", "wangwu@example.com", "user", deptIDs[2]},
-		{"赵六", "zhaoliu@example.com", "auditor", deptIDs[3]},
-		{"数据分析Agent", "agent-data@example.com", "user", deptIDs[3]},
-		{"代码审查Bot", "agent-code@example.com", "user", deptIDs[0]},
-		{"客服Agent", "agent-service@example.com", "user", deptIDs[2]},
+	users := []struct{ name, email, role, deptID string; budget float64 }{
+		{"张三", "zhangsan@company.com", "super_admin", deptIDs[0], 20000},
+		{"李四", "lisi@company.com", "dept_admin", deptIDs[1], 10000},
+		{"王五", "wangwu@company.com", "user", deptIDs[2], 8000},
+		{"赵六", "zhaoliu@company.com", "user", deptIDs[3], 6000},
+		{"孙七", "sunqi@company.com", "auditor", deptIDs[4], 5000},
+		{"数据分析Agent", "agent-data@company.com", "user", deptIDs[3], 15000},
+		{"代码审查Bot", "agent-code@company.com", "user", deptIDs[0], 12000},
+		{"客服Agent", "agent-service@company.com", "user", deptIDs[2], 5000},
+		{"测试Agent", "agent-test@company.com", "user", deptIDs[4], 3000},
+	}
+	for _, u := range users {
+		id := uuid.New().String()
+		s.users[id] = &User{ID: id, OrgID: orgID, DeptID: u.deptID, Name: u.name, Email: u.email, Role: u.role, MonthlyBudget: u.budget, CreatedAt: time.Now()}
 	}
 	for _, u := range users {
 		id := uuid.New().String()
@@ -161,6 +170,31 @@ func (s *Service) DeleteDept(id string) error {
 	if _, ok := s.depts[id]; !ok { return fmt.Errorf("not found") }
 	delete(s.depts, id)
 	return nil
+}
+
+func (s *Service) UpdateDeptBudget(id string, budget float64) (*Dept, error) {
+	s.mu.Lock(); defer s.mu.Unlock()
+	d, ok := s.depts[id]
+	if !ok { return nil, fmt.Errorf("not found") }
+	d.MonthlyBudget = budget
+	return d, nil
+}
+
+func (s *Service) UpdateUserBudget(id string, budget float64) (*User, error) {
+	s.mu.Lock(); defer s.mu.Unlock()
+	u, ok := s.users[id]
+	if !ok { return nil, fmt.Errorf("not found") }
+	u.MonthlyBudget = budget
+	return u, nil
+}
+
+func (s *Service) RemoveUserFromDept(id string) (*User, error) {
+	s.mu.Lock(); defer s.mu.Unlock()
+	u, ok := s.users[id]
+	if !ok { return nil, fmt.Errorf("not found") }
+	u.DeptID = ""
+	s.updateDeptCounts()
+	return u, nil
 }
 
 func (s *Service) ListUsers(orgID, deptID string) []*User {

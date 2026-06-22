@@ -10,10 +10,10 @@ import apiClient from '@/lib/api-client';
 const { Title, Text } = Typography;
 
 const ROLE_CREDENTIALS: Record<string, string> = {
-  super_admin: 'zhangsan@example.com',
-  dept_admin: 'lisi@example.com',
-  user: 'wangwu@example.com',
-  auditor: 'zhaoliu@example.com',
+  super_admin: 'zhangsan@company.com',
+  dept_admin: 'lisi@company.com',
+  user: 'wangwu@company.com',
+  auditor: 'sunqi@company.com',
 };
 
 const ROLE_OPTIONS = [

@@ -54,7 +54,7 @@ function RankingTab({ sortBy, setSortBy, ranking, totalCost, anomalies, setSelec
             { title: '部门', dataIndex: 'dept_name' },
             { title: '调用', dataIndex: ['stats', 'today_calls'], render: (v: number) => formatNumber(v) },
             { title: 'Token', dataIndex: ['stats', 'today_tokens'], render: (v: number) => formatTokens(v) },
-            { title: '费用', dataIndex: ['stats', 'today_cost'], render: (v: number) => <span style={{ fontWeight: 600, color: '#1677ff' }}>¥{formatCost(v)}</span> },
+            { title: '费用', dataIndex: ['stats', 'today_cost'], render: (v: number) => <span style={{ fontWeight: 600, color: '#1677ff' }}>{formatCost(v)}</span> },
             { title: '延迟', dataIndex: ['stats', 'avg_latency_ms'], render: (v: number) => formatLatency(v) },
             { title: '错误率', key: 'err', render: (_: any, r: any) => <Progress percent={Math.round(r.stats.error_rate * 100)} size="small" strokeColor={r.stats.error_rate > 0.05 ? '#ff4d4f' : '#52c41a'} /> },
             { title: '风险', key: 'risk', render: (_: any, r: any) => {
@@ -89,8 +89,8 @@ function RankingTab({ sortBy, setSortBy, ranking, totalCost, anomalies, setSelec
           </Descriptions>
           <Divider />
           <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="今日费用">¥{formatCost(profile.stats.today_cost)}</Descriptions.Item>
-            <Descriptions.Item label="本月费用">¥{formatCost(profile.stats.month_cost)}</Descriptions.Item>
+            <Descriptions.Item label="今日费用">{formatCost(profile.stats.today_cost)}</Descriptions.Item>
+            <Descriptions.Item label="本月费用">{formatCost(profile.stats.month_cost)}</Descriptions.Item>
             <Descriptions.Item label="偏好模型"><Tag color={PROVIDER_COLORS[profile.stats.preferred_model?.split('-')[0]]}>{profile.stats.preferred_model}</Tag></Descriptions.Item>
             <Descriptions.Item label="今日调用">{formatNumber(profile.stats.today_calls)}</Descriptions.Item>
             <Descriptions.Item label="今日Token">{formatTokens(profile.stats.today_tokens)}</Descriptions.Item>

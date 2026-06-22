@@ -242,6 +242,18 @@ func (m *KeyManager) Revoke(keyID string) error {
 	return fmt.Errorf("key not found")
 }
 
+func (m *KeyManager) SetStatus(keyID, status string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, k := range m.keys {
+		if k.ID == keyID {
+			k.Status = status
+			return nil
+		}
+	}
+	return fmt.Errorf("key not found")
+}
+
 func (m *KeyManager) Update(keyID string, req *CreateKeyRequest) (*StoredKey, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

@@ -85,8 +85,8 @@ export default function DashboardPage() {
                 format={(p) => <div><div style={{fontSize:24,fontWeight:700}}>{p}%</div><div style={{fontSize:11,color:'#8c8c8c'}}>已使用</div></div>} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-              <div style={{background:'#f5f5f5',padding:8,borderRadius:6,textAlign:'center'}}><div style={{fontSize:10,color:'#8c8c8c'}}>已用</div><div style={{fontWeight:700,fontSize:14}}>¥{formatCost(data.month.cost)}</div></div>
-              <div style={{background:'#f5f5f5',padding:8,borderRadius:6,textAlign:'center'}}><div style={{fontSize:10,color:'#8c8c8c'}}>预算</div><div style={{fontWeight:700,fontSize:14}}>¥{formatCost(data.month.budget)}</div></div>
+              <div style={{background:'#f5f5f5',padding:8,borderRadius:6,textAlign:'center'}}><div style={{fontSize:10,color:'#8c8c8c'}}>已用</div><div style={{fontWeight:700,fontSize:14}}>{formatCost(data.month.cost)}</div></div>
+              <div style={{background:'#f5f5f5',padding:8,borderRadius:6,textAlign:'center'}}><div style={{fontSize:10,color:'#8c8c8c'}}>预算</div><div style={{fontWeight:700,fontSize:14}}>{formatCost(data.month.budget)}</div></div>
             </div>
           </Card>
         </Col>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <Table dataSource={data.top_depts} rowKey="dept_id" pagination={false} size="small"
               columns={[
                 {title:'部门',dataIndex:'dept_name'},
-                {title:'费用',dataIndex:'cost',render:(v:number)=><span style={{fontWeight:600}}>¥{formatCost(v)}</span>},
+                {title:'费用',dataIndex:'cost',render:(v:number)=><span style={{fontWeight:600}}>{formatCost(v)}</span>},
                 {title:'Token',dataIndex:'tokens',render:(v:number)=>formatTokens(v)},
                 {title:'用户',dataIndex:'user_count',align:'center' as const},
                 {title:'趋势',dataIndex:'cost_change_rate',render:(v:number)=>{const ch=formatChange(v);return <span style={{color:ch.trend==='up'?'#ff4d4f':ch.trend==='down'?'#52c41a':'#8c8c8c'}}>{ch.text}</span>}},
@@ -116,7 +116,7 @@ export default function DashboardPage() {
             <Table dataSource={data.top_users} rowKey="user_id" pagination={false} size="small"
               columns={[
                 {title:'用户',dataIndex:'user_name'},
-                {title:'费用',dataIndex:'cost',render:(v:number)=><span style={{fontWeight:600}}>¥{formatCost(v)}</span>},
+                {title:'费用',dataIndex:'cost',render:(v:number)=><span style={{fontWeight:600}}>{formatCost(v)}</span>},
                 {title:'Token',dataIndex:'tokens',render:(v:number)=>formatTokens(v)},
               ]} />
           </Card>

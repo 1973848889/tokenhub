@@ -73,3 +73,36 @@ export const SCENE_TAGS = [
   { value: 'creative_writing', label: '创意写作' },
   { value: 'education', label: '教育培训' },
 ];
+
+export const ASSET_RISK_COLORS: Record<string, string> = {
+  safe: '#52c41a',
+  risky: '#faad14',
+  blocked: '#ff4d4f',
+};
+
+export const ASSET_RISK_LABELS: Record<string, string> = {
+  safe: '安全',
+  risky: '风险',
+  blocked: '拦截',
+};
+
+export const ASSET_TYPE_LABELS: Record<string, string> = {
+  agent: 'Agent',
+  skill: 'Skill',
+  mcp: 'MCP工具',
+};
+
+export const SCAN_DIMENSION_LABELS: Record<string, string> = {
+  injection: '注入风险',
+  permission: '权限审计',
+  compliance: '合规检查',
+  supply_chain: '供应链漏洞',
+};
+
+export const SEVERITY_COLORS: Record<string, string> = {
+  critical: '#ff4d4f',
+  high: '#fa8c16',
+  medium: '#faad14',
+  low: '#1890ff',
+  info: '#8c8c8c',
+};

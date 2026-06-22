@@ -18,6 +18,7 @@ import (
 	"github.com/tokenhub/backend/internal/filter/safety"
 	"github.com/tokenhub/backend/internal/gateway/middleware"
 	"github.com/tokenhub/backend/internal/keygen"
+	"github.com/tokenhub/backend/internal/marketplace"
 	"github.com/tokenhub/backend/internal/organization"
 	"github.com/tokenhub/backend/internal/router"
 	"github.com/tokenhub/backend/internal/sandbox"
@@ -64,6 +65,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		admin.GET("/keys/:id", h.GetAPIKey)
 		admin.DELETE("/keys/:id", h.RevokeAPIKey)
 		admin.PUT("/keys/:id/budget", h.UpdateKeyBudget)
+		admin.PUT("/keys/:id/status", h.UpdateKeyStatus)
 		admin.PUT("/keys/:id", h.UpdateAPIKey)
 		admin.POST("/recommend", h.RecommendModels)
 		admin.GET("/safety/overview", h.SafetyOverview)
@@ -81,10 +83,13 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		admin.DELETE("/orgs/:id", h.DeleteOrg)
 		admin.GET("/orgs/:id/depts", h.ListDepts)
 		admin.POST("/depts", h.CreateDept)
+		admin.PUT("/depts/:id/budget", h.UpdateDeptBudget)
 		admin.PUT("/depts/:id", h.UpdateDept)
 		admin.DELETE("/depts/:id", h.DeleteDept)
 		admin.GET("/orgs/:id/users", h.ListUsers)
 		admin.POST("/users", h.CreateUser)
+		admin.PUT("/users/:id/budget", h.UpdateUserBudget)
+		admin.DELETE("/users/:id/dept", h.RemoveUserFromDept)
 		admin.PUT("/users/:id", h.UpdateUser)
 		admin.DELETE("/users/:id", h.DeleteUser)
 		admin.POST("/users/:id/reset-password", h.ResetUserPassword)
@@ -104,6 +109,29 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		admin.GET("/sandbox/rules", h.SandboxRules)
 		admin.PUT("/sandbox/rules", h.UpdateSandboxRules)
 		admin.GET("/sandbox/history", h.SandboxHistory)
+		admin.GET("/market/experts", h.ListMarketExperts)
+		admin.GET("/market/experts/:id", h.GetMarketExpert)
+		admin.POST("/market/experts/:id/subscribe", h.SubscribeExpert)
+		admin.GET("/market/skills", h.ListMarketSkills)
+		admin.POST("/market/skills/:id/install", h.InstallSkill)
+		admin.PUT("/market/skills/:id/toggle", h.ToggleSkill)
+		admin.DELETE("/market/skills/:id", h.UninstallSkill)
+		admin.GET("/market/connectors", h.ListConnectors)
+		admin.POST("/market/connectors/:id/connect", h.ConnectConnector)
+		admin.POST("/market/connectors/:id/disconnect", h.DisconnectConnector)
+		admin.GET("/market/mcp", h.ListMCPTools)
+		admin.POST("/market/mcp", h.CreateMCPTool)
+		admin.GET("/market/mcp/:id", h.GetMCPTool)
+		admin.PUT("/market/mcp/:id", h.UpdateMCPTool)
+		admin.DELETE("/market/mcp/:id", h.DeleteMCPTool)
+		admin.POST("/market/mcp/:id/toggle", h.ToggleMCPTool)
+		admin.GET("/asset-scan/overview", h.AssetScanOverview)
+		admin.GET("/asset-scan/results", h.AssetScanResults)
+		admin.GET("/asset-scan/results/:asset_id", h.AssetScanResult)
+		admin.POST("/asset-scan/scan", h.TriggerAssetScan)
+		admin.GET("/asset-scan/config", h.GetAssetScanConfig)
+		admin.PUT("/asset-scan/config", h.UpdateAssetScanConfig)
+		admin.GET("/asset-scan/skills", h.ListAssetScanSkills)
 	}
 }
 
@@ -361,6 +389,14 @@ func (h *Handler) UpdateKeyBudget(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
 
+func (h *Handler) UpdateKeyStatus(c *gin.Context) {
+	var body struct{ Status string `json:"status"` }
+	if err := c.ShouldBindJSON(&body); err != nil { BadRequest(c, "invalid request: "+err.Error()); return }
+	if body.Status != "active" && body.Status != "suspended" { BadRequest(c, "status must be active or suspended"); return }
+	if err := keygen.GetManager().SetStatus(c.Param("id"), body.Status); err != nil { BadRequest(c, err.Error()); return }
+	c.JSON(http.StatusOK, gin.H{"status": body.Status, "id": c.Param("id")})
+}
+
 func (h *Handler) UpdateAPIKey(c *gin.Context) {
 	var req keygen.CreateKeyRequest
 	if err := c.ShouldBindJSON(&req); err != nil { BadRequest(c, "invalid request: "+err.Error()); return }
@@ -550,6 +586,14 @@ func (h *Handler) CreateDept(c *gin.Context) {
 	c.JSON(http.StatusCreated, organization.GetService().CreateDept(&req))
 }
 
+func (h *Handler) UpdateDeptBudget(c *gin.Context) {
+	var req struct{ Budget float64 `json:"monthly_budget"` }
+	if err := c.ShouldBindJSON(&req); err != nil { BadRequest(c, "invalid request"); return }
+	d, err := organization.GetService().UpdateDeptBudget(c.Param("id"), req.Budget)
+	if err != nil { BadRequest(c, err.Error()); return }
+	c.JSON(http.StatusOK, d)
+}
+
 func (h *Handler) DeleteDept(c *gin.Context) {
 	if err := organization.GetService().DeleteDept(c.Param("id")); err != nil { BadRequest(c, err.Error()); return }
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
@@ -587,6 +631,20 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
 
+func (h *Handler) UpdateUserBudget(c *gin.Context) {
+	var req struct{ Budget float64 `json:"monthly_budget"` }
+	if err := c.ShouldBindJSON(&req); err != nil { BadRequest(c, "invalid request"); return }
+	u, err := organization.GetService().UpdateUserBudget(c.Param("id"), req.Budget)
+	if err != nil { BadRequest(c, err.Error()); return }
+	c.JSON(http.StatusOK, u)
+}
+
+func (h *Handler) RemoveUserFromDept(c *gin.Context) {
+	u, err := organization.GetService().RemoveUserFromDept(c.Param("id"))
+	if err != nil { BadRequest(c, err.Error()); return }
+	c.JSON(http.StatusOK, u)
+}
+
 func (h *Handler) ResetUserPassword(c *gin.Context) {
 	u, err := organization.GetService().ResetPassword(c.Param("id"))
 	if err != nil { BadRequest(c, err.Error()); return }
@@ -606,7 +664,9 @@ func (h *Handler) GetAccessControl(c *gin.Context) {
 func (h *Handler) RegisterAgent(c *gin.Context) {
 	var req agent.CreateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil || req.Name == "" { BadRequest(c, "name required"); return }
-	c.JSON(http.StatusCreated, agent.GetService().CreateRegisteredAgent(&req))
+	a := agent.GetService().CreateRegisteredAgent(&req)
+	agent.GetSecurityAgent().NotifyAssetChange("agent", a.ID)
+	c.JSON(http.StatusCreated, a)
 }
 
 func (h *Handler) ListRegisteredAgents(c *gin.Context) {
@@ -684,6 +744,175 @@ func (h *Handler) UpdateSandboxRules(c *gin.Context) {
 
 func (h *Handler) SandboxHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": sandbox.GetService().GetReviews("")})
+}
+
+// ===== Marketplace =====
+
+func (h *Handler) ListMarketExperts(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": marketplace.GetService().ListExperts(c.Query("category"))})
+}
+
+func (h *Handler) GetMarketExpert(c *gin.Context) {
+	e := marketplace.GetService().GetExpert(c.Param("id"))
+	if e == nil { BadRequest(c, "expert not found"); return }
+	c.JSON(http.StatusOK, e)
+}
+
+func (h *Handler) SubscribeExpert(c *gin.Context) {
+	id := c.Param("id")
+	e := marketplace.GetService().GetExpert(id)
+	if e == nil { BadRequest(c, "expert not found"); return }
+	wasSubscribed := e.Subscribed
+	marketplace.GetService().SubscribeExpert(id)
+
+	if !wasSubscribed {
+		created, err := keygen.GetManager().CreateKey(&keygen.CreateKeyRequest{Name: e.Name, UserID: "user-001", OrgID: "org-default", DeptID: "dept-rd", AllowedModels: []string{"deepseek-chat","qwen-max"}, DailyBudget: 100, RateLimitRPM: 60})
+		if err == nil && created != nil {
+			marketplace.GetService().SetExpertApiKey(id, created.ID, created.KeyPrefix)
+			c.JSON(http.StatusOK, gin.H{"status":"subscribed","api_key":created.APIKey,"api_key_prefix":created.KeyPrefix})
+			return
+		}
+		marketplace.GetService().SetExpertApiKey(id, "", "")
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (h *Handler) CreateMarketExpert(c *gin.Context) {
+	var req marketplace.CreateExpertRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	if req.Name == "" { BadRequest(c, "name required"); return }
+	e := marketplace.GetService().CreateExpert(&req)
+	c.JSON(http.StatusCreated, e)
+}
+
+func (h *Handler) UpdateMarketExpert(c *gin.Context) {
+	var req marketplace.CreateExpertRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	e, err := marketplace.GetService().UpdateExpert(c.Param("id"), &req)
+	if err != nil { InternalError(c, err.Error()); return }
+	if e == nil { BadRequest(c, "expert not found"); return }
+	c.JSON(http.StatusOK, e)
+}
+
+func (h *Handler) DeleteMarketExpert(c *gin.Context) {
+	marketplace.GetService().DeleteExpert(c.Param("id"))
+	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+}
+
+func (h *Handler) ListMarketSkills(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": marketplace.GetService().ListSkills(c.Query("category"))})
+}
+
+func (h *Handler) InstallSkill(c *gin.Context) {
+	marketplace.GetService().InstallSkill(c.Param("id"))
+	agent.GetSecurityAgent().NotifyAssetChange("skill", c.Param("id"))
+	c.JSON(http.StatusOK, gin.H{"status":"installed"})
+}
+func (h *Handler) ToggleSkill(c *gin.Context) { marketplace.GetService().ToggleSkill(c.Param("id")); c.JSON(http.StatusOK, gin.H{"status":"toggled"}) }
+func (h *Handler) UninstallSkill(c *gin.Context) { marketplace.GetService().UninstallSkill(c.Param("id")); c.JSON(http.StatusOK, gin.H{"status":"uninstalled"}) }
+
+func (h *Handler) ListConnectors(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": marketplace.GetService().ListConnectors()})
+}
+
+func (h *Handler) ConnectConnector(c *gin.Context) { marketplace.GetService().ConnectConnector(c.Param("id")); c.JSON(http.StatusOK, gin.H{"status":"connected"}) }
+func (h *Handler) DisconnectConnector(c *gin.Context) { marketplace.GetService().DisconnectConnector(c.Param("id")); c.JSON(http.StatusOK, gin.H{"status":"disconnected"}) }
+
+// ===== MCP Tools =====
+
+func (h *Handler) ListMCPTools(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": marketplace.GetService().ListMCPTools()})
+}
+
+func (h *Handler) GetMCPTool(c *gin.Context) {
+	t := marketplace.GetService().GetMCPTool(c.Param("id"))
+	if t == nil { BadRequest(c, "mcp tool not found"); return }
+	c.JSON(http.StatusOK, t)
+}
+
+func (h *Handler) CreateMCPTool(c *gin.Context) {
+	var req marketplace.CreateMCPRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.Name == "" { BadRequest(c, "name required"); return }
+	t := marketplace.GetService().CreateMCPTool(&req)
+	agent.GetSecurityAgent().NotifyAssetChange("mcp", t.ID)
+	c.JSON(http.StatusCreated, t)
+}
+
+func (h *Handler) UpdateMCPTool(c *gin.Context) {
+	var req marketplace.CreateMCPRequest
+	if err := c.ShouldBindJSON(&req); err != nil { BadRequest(c, err.Error()); return }
+	t := marketplace.GetService().UpdateMCPTool(c.Param("id"), &req)
+	if t == nil { BadRequest(c, "mcp tool not found"); return }
+	c.JSON(http.StatusOK, t)
+}
+
+func (h *Handler) DeleteMCPTool(c *gin.Context) {
+	marketplace.GetService().DeleteMCPTool(c.Param("id"))
+	c.JSON(http.StatusOK, gin.H{"status":"deleted"})
+}
+
+func (h *Handler) ToggleMCPTool(c *gin.Context) {
+	marketplace.GetService().ToggleMCPTool(c.Param("id"))
+	c.JSON(http.StatusOK, gin.H{"status":"toggled"})
+}
+
+// ===== Asset Scan =====
+
+func (h *Handler) AssetScanOverview(c *gin.Context) {
+	c.JSON(http.StatusOK, agent.GetSecurityAgent().GetOverview())
+}
+
+func (h *Handler) AssetScanResults(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	assetType := c.Query("type")
+	risk := c.Query("risk")
+	data, total := agent.GetSecurityAgent().GetResults(assetType, risk, page, pageSize)
+	c.JSON(http.StatusOK, gin.H{"data": data, "total": total, "page": page, "page_size": pageSize})
+}
+
+func (h *Handler) AssetScanResult(c *gin.Context) {
+	r := agent.GetSecurityAgent().GetResult(c.Param("asset_id"))
+	if r == nil { BadRequest(c, "scan result not found"); return }
+	c.JSON(http.StatusOK, r)
+}
+
+func (h *Handler) TriggerAssetScan(c *gin.Context) {
+	agent.GetSecurityAgent().TriggerScan()
+	c.JSON(http.StatusOK, gin.H{"status": "scan_started"})
+}
+
+func (h *Handler) GetAssetScanConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"scan_interval_h": agent.GetSecurityAgent().GetScanInterval()})
+}
+
+func (h *Handler) UpdateAssetScanConfig(c *gin.Context) {
+	var req struct{ ScanIntervalH int `json:"scan_interval_h"` }
+	if err := c.ShouldBindJSON(&req); err != nil { BadRequest(c, err.Error()); return }
+	if req.ScanIntervalH < 1 { req.ScanIntervalH = 1 }
+	agent.GetSecurityAgent().SetScanInterval(req.ScanIntervalH)
+	c.JSON(http.StatusOK, gin.H{"scan_interval_h": agent.GetSecurityAgent().GetScanInterval()})
+}
+
+func (h *Handler) ListAssetScanSkills(c *gin.Context) {
+	skills := agent.GetSecurityAgent().ListSkills()
+	type skillInfo struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Category    string `json:"category"`
+	}
+	result := make([]skillInfo, 0)
+	for _, s := range skills {
+		result = append(result, skillInfo{s.ID(), s.Name(), s.Description(), s.Category()})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 // ===== Middleware =====

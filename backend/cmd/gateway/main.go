@@ -19,6 +19,7 @@ import (
 	"github.com/tokenhub/backend/internal/adapter/kimi"
 	"github.com/tokenhub/backend/internal/adapter/qwen"
 	"github.com/tokenhub/backend/internal/adapter/zhipu"
+	"github.com/tokenhub/backend/internal/agent"
 	"github.com/tokenhub/backend/internal/gateway"
 	"github.com/tokenhub/backend/internal/keygen"
 	"github.com/tokenhub/backend/internal/ws"
@@ -52,6 +53,10 @@ func main() {
 	hub := ws.NewHub(redisClient)
 	go hub.Run()
 	log.Println("WebSocket Hub started")
+
+	securityAgent := agent.GetSecurityAgent()
+	go securityAgent.Start()
+	log.Println("Security Agent started")
 
 	gin.SetMode(cfg.Server.Mode)
 	r := gin.New()
@@ -88,6 +93,7 @@ func main() {
 	defer cancel()
 
 	hub.Shutdown()
+	agent.GetSecurityAgent().Stop()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("Shutdown error: %v", err)
 	}

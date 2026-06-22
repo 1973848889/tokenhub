@@ -12,7 +12,7 @@ export interface APIKey {
   dept_name: string;
   org_id: string;
   dept_id: string;
-  status: 'active' | 'revoked' | 'expired';
+  status: 'active' | 'suspended' | 'revoked' | 'expired';
   daily_budget: number;
   rate_limit_rpm: number;
   allowed_models: string[];
@@ -134,7 +134,6 @@ export function useUpdateKey() {
     },
     onSuccess: (_data, variables) => {
       message.success('Key 已更新');
-      // 将编辑的Key置顶
       queryClient.setQueryData<KeyListResult>(['api-keys'], (prev) => {
         if (!prev) return prev;
         const updatedList = prev.data.map((k) => (k.id === variables.keyId ? { ...k, ..._data } : k));
@@ -146,6 +145,22 @@ export function useUpdateKey() {
     },
     onError: () => {
       message.error('更新失败');
+    },
+  });
+}
+
+export function useToggleKeyStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ keyId, status }: { keyId: string; status: string }) => {
+      await apiClient.put(`/api/v1/admin/keys/${keyId}/status`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+    },
+    onError: () => {
+      message.error('操作失败');
     },
   });
 }

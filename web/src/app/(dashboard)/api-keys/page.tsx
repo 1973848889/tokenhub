@@ -10,7 +10,7 @@ import {
   DeleteOutlined, EyeOutlined, KeyOutlined, EditOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { useAPIKeys, useCreateKey, useRevokeKey, useUpdateKey } from '@/hooks/useAPIKeys';
+import { useAPIKeys, useCreateKey, useRevokeKey, useUpdateKey, useToggleKeyStatus } from '@/hooks/useAPIKeys';
 import { KeyCreateModal } from '@/components/api-keys/KeyCreateModal';
 import { NewKeyRevealModal } from '@/components/api-keys/NewKeyRevealModal';
 import { formatTokens, formatCost, formatRelativeTime } from '@/lib/formatters';
@@ -32,6 +32,7 @@ export default function APIKeysPage() {
   const createMutation = useCreateKey();
   const revokeMutation = useRevokeKey();
   const updateMutation = useUpdateKey();
+  const toggleStatus = useToggleKeyStatus();
 
   const handleCreate = useCallback((values: any) => {
     createMutation.mutate(values, {
@@ -66,7 +67,7 @@ export default function APIKeysPage() {
       render: (_, r) => (
         <div>
           <div style={{ fontSize: 13 }}><span style={{ fontFamily: 'monospace' }}>{formatTokens(r.today_tokens)}</span></div>
-          <div style={{ fontSize: 13, color: '#1677ff', fontFamily: 'monospace' }}>¥{formatCost(r.today_cost)}</div>
+          <div style={{ fontSize: 13, color: '#1677ff', fontFamily: 'monospace' }}>{formatCost(r.today_cost)}</div>
         </div>
       ),
     },
@@ -77,7 +78,7 @@ export default function APIKeysPage() {
         const pct = Math.min(r.today_cost / budget, 1);
         return (
           <div>
-            <div style={{ fontFamily: 'monospace', fontSize: 13 }}>¥{formatCost(budget)}</div>
+            <div style={{ fontFamily: 'monospace', fontSize: 13 }}>{formatCost(budget)}</div>
             {r.today_cost > 0 && <Progress percent={Math.round(pct * 100)} size="small" strokeColor={pct > 0.9 ? '#ff4d4f' : pct > 0.7 ? '#faad14' : '#1677ff'} />}
           </div>
         );
@@ -86,18 +87,28 @@ export default function APIKeysPage() {
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 90,
       render: (s: string) => {
-        const m: Record<string, { color: string; label: string }> = { active: { color: 'green', label: '正常' }, revoked: { color: 'red', label: '已吊销' }, expired: { color: 'default', label: '已过期' } };
+        const m: Record<string, { color: string; label: string }> = { active: { color: 'green', label: '正常' }, suspended: { color: 'orange', label: '已停用' }, revoked: { color: 'red', label: '已删除' }, expired: { color: 'default', label: '已过期' } };
         return <Tag color={m[s]?.color}>{m[s]?.label || s}</Tag>;
       },
     },
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 110, render: (v: string) => new Date(v).toLocaleDateString('zh-CN'), responsive: ['lg'] },
     ...(isAdmin ? [{
-      title: '操作', key: 'actions', width: 100, fixed: 'right' as const,
+      title: '操作', key: 'actions', width: 180, fixed: 'right' as const,
       render: (_: any, r: APIKey) => (
         <Space size="small">
           <Tooltip title="查看详情"><Button type="text" size="small" icon={<EyeOutlined />} onClick={() => setDetailKey(r)} /></Tooltip>
           {r.status === 'active' && (
-            <Popconfirm title="确定吊销此Key？" description="吊销后立即生效" onConfirm={() => revokeMutation.mutate(r.id)} okText="确定" cancelText="取消" okButtonProps={{ danger: true }}>
+            <Popconfirm title="确定停用此Key？" description="停用后该Key将无法调用" onConfirm={() => toggleStatus.mutate({ keyId: r.id, status: 'suspended' })} okText="确定" cancelText="取消">
+              <Button type="text" size="small" danger>停用</Button>
+            </Popconfirm>
+          )}
+          {r.status === 'suspended' && (
+            <Popconfirm title="确定启用此Key？" onConfirm={() => toggleStatus.mutate({ keyId: r.id, status: 'active' })} okText="确定" cancelText="取消">
+              <Button type="text" size="small" style={{ color: '#52c41a' }}>启用</Button>
+            </Popconfirm>
+          )}
+          {(r.status === 'active' || r.status === 'suspended') && (
+            <Popconfirm title="确定删除此Key？" description="删除后立即生效且不可恢复" onConfirm={() => revokeMutation.mutate(r.id)} okText="确定" cancelText="取消" okButtonProps={{ danger: true }}>
               <Button type="text" size="small" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
@@ -124,7 +135,7 @@ export default function APIKeysPage() {
         extra={
           <Space>
             <Input placeholder="搜索名称/用户" prefix={<SearchOutlined />} value={searchText} onChange={(e) => { setSearchText(e.target.value); setPage(1); }} allowClear style={{ width: 180 }} />
-            <Select value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); }} placeholder="状态" allowClear style={{ width: 100 }} options={[{ value: 'active', label: '正常' }, { value: 'revoked', label: '已吊销' }]} />
+            <Select value={statusFilter} onChange={(v) => { setStatusFilter(v); setPage(1); }} placeholder="状态" allowClear style={{ width: 100 }} options={[{ value: 'active', label: '正常' }, { value: 'suspended', label: '已停用' }]} />
             {isAdmin && (
               <>
                 <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
@@ -172,7 +183,7 @@ export default function APIKeysPage() {
             <Descriptions.Item label="日预算">{detailKey.daily_budget > 0 ? `¥${detailKey.daily_budget}` : '无限制'}</Descriptions.Item>
             <Descriptions.Item label="频率限制">{detailKey.rate_limit_rpm} RPM</Descriptions.Item>
             <Descriptions.Item label="可用模型">{detailKey.allowed_models?.length ? detailKey.allowed_models.map((m) => <Tag key={m}>{m}</Tag>) : '全部'}</Descriptions.Item>
-            <Descriptions.Item label="今日用量">{formatTokens(detailKey.today_tokens)} tokens / ¥{formatCost(detailKey.today_cost)}</Descriptions.Item>
+            <Descriptions.Item label="今日用量">{formatTokens(detailKey.today_tokens)} tokens / {formatCost(detailKey.today_cost)}</Descriptions.Item>
             <Descriptions.Item label="今日调用">{detailKey.today_calls} 次</Descriptions.Item>
             <Descriptions.Item label="创建时间">{new Date(detailKey.created_at).toLocaleString('zh-CN')}</Descriptions.Item>
             {detailKey.expires_at && <Descriptions.Item label="过期时间">{new Date(detailKey.expires_at).toLocaleString('zh-CN')}</Descriptions.Item>}

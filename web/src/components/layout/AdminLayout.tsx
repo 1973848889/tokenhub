@@ -19,15 +19,30 @@ const allMenuItems = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
   { key: '/api-keys', icon: <KeyOutlined />, label: 'API Key' },
   {
-    key: 'app-group', icon: <ControlOutlined />, label: '模型广场',
+    key: 'app-group', icon: <ControlOutlined />, label: '应用管理',
     children: [
-      { key: '/model-aggregation', icon: <ApiOutlined />, label: '模型聚合' },
-      { key: '/models', icon: <ThunderboltOutlined />, label: '模型推荐' },
-      { key: '/model-management', icon: <SettingOutlined />, label: '模型管理' },
+      {
+        key: 'model-group', label: '模型方舟',
+        children: [
+          { key: '/model-aggregation', icon: <ApiOutlined />, label: '模型聚合' },
+          { key: '/models', icon: <ThunderboltOutlined />, label: '模型推荐' },
+          { key: '/model-management', icon: <SettingOutlined />, label: '模型管理' },
+        ],
+      },
+      {
+        key: 'market-group', label: '智能体市场',
+        children: [
+          { key: '/agent-marketplace', icon: <RobotOutlined />, label: '专家市场' },
+          { key: '/expert-management', icon: <RobotOutlined />, label: '专家管理' },
+          { key: '/skill-repository', icon: <ApiOutlined />, label: '技能仓库' },
+          { key: '/connector-manager', icon: <ApiOutlined />, label: '连接器管理' },
+          { key: '/mcp-management', icon: <ApiOutlined />, label: 'MCP 工具管理' },
+        ],
+      },
     ],
   },
   {
-    key: 'billing-group', icon: <DollarOutlined />, label: '运营管理',
+    key: 'billing-group', icon: <DollarOutlined />, label: '账单管理',
     children: [
       { key: '/billing', icon: <FundOutlined />, label: '账单分析' },
       { key: '/budget-config', icon: <DollarOutlined />, label: '预算配置' },
@@ -36,7 +51,7 @@ const allMenuItems = [
   {
     key: 'safety-group', icon: <SafetyCertificateOutlined />, label: '安全治理',
     children: [
-      { key: '/safety', icon: <SafetyCertificateOutlined />, label: '安全大屏' },
+      { key: '/safety', icon: <SafetyCertificateOutlined />, label: '运营安全' },
       { key: '/compliance', icon: <AuditOutlined />, label: '合规报告' },
       { key: '/access-control', icon: <SafetyCertificateOutlined />, label: '安全配置' },
     ],
@@ -69,13 +84,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const open: string[] = [];
     if (pathname) {
       for (const item of menuItems) {
-        if (item.children) {
-          for (const child of item.children) {
-            if (pathname.startsWith(child.key)) {
+        const checkChildren = (children: any[]) => {
+          for (const child of children) {
+            if (child.children) {
+              if (pathname.startsWith(child.key)) { open.push(item.key); open.push(child.key); }
+              checkChildren(child.children);
+            } else if (pathname.startsWith(child.key)) {
               open.push(item.key);
             }
           }
-        }
+        };
+        if (item.children) checkChildren(item.children);
       }
     }
     return { selected, open };
@@ -101,13 +120,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           mode="inline"
           selectedKeys={selected}
           defaultOpenKeys={collapsed ? [] : open}
-          onClick={({ key }) => { if (!menuItems.find(m => m.children?.find(c => c.key === key))) router.push(key); }}
+          onClick={({ key }) => { const isLeaf = !menuItems.some((m: any) => m.children?.some((c: any) => c.children?.some((gc: any) => gc.key === key) || c.key === key)); if (isLeaf) router.push(key); }}
           style={{ border: 'none' }}
           items={menuItems.map((item) => ({
             ...item,
-            children: item.children?.map((child) => ({
+            children: item.children?.map((child: any) => ({
               ...child,
-              onClick: () => router.push(child.key),
+              children: child.children?.map((grandchild: any) => ({
+                ...grandchild,
+                onClick: () => router.push(grandchild.key),
+              })),
             })),
           }))}
         />
