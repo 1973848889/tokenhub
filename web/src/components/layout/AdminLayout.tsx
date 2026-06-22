@@ -102,6 +102,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { selected, open } = findSelectedAndOpen();
 
+  const handleMenuClick = ({ key }: { key: string }) => {
+    const hasChildren = (items: any[], targetKey: string): boolean => {
+      for (const item of items) {
+        if (item.key === targetKey && item.children) return true;
+        if (item.children && hasChildren(item.children, targetKey)) return true;
+      }
+      return false;
+    };
+    if (!hasChildren(menuItems, key)) router.push(key);
+  };
+
   const handleLogout = () => {
     logout();
     router.push('/login');
@@ -120,7 +131,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           mode="inline"
           selectedKeys={selected}
           defaultOpenKeys={collapsed ? [] : open}
-          onClick={({ key }) => { const isLeaf = !menuItems.some((m: any) => m.children?.some((c: any) => c.children?.some((gc: any) => gc.key === key) || c.key === key)); if (isLeaf) router.push(key); }}
+          onClick={handleMenuClick}
           style={{ border: 'none' }}
           items={menuItems.map((item) => ({
             ...item,
@@ -128,7 +139,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ...child,
               children: child.children?.map((grandchild: any) => ({
                 ...grandchild,
-                onClick: () => router.push(grandchild.key),
+                label: grandchild.label,
+                key: grandchild.key,
               })),
             })),
           }))}
