@@ -26,7 +26,6 @@ const allMenuItems = [
         children: [
           { key: '/model-aggregation', icon: <ApiOutlined />, label: '模型聚合' },
           { key: '/models', icon: <ThunderboltOutlined />, label: '模型推荐' },
-          { key: '/model-management', icon: <SettingOutlined />, label: '模型管理' },
         ],
       },
       {

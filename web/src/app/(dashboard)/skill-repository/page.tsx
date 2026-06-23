@@ -204,22 +204,27 @@ function MCPTab() {
 
   const cols = subTab === 'manage'
     ? [
-        { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
-        { title: '分类', dataIndex: 'category', render: (v: string) => <Tag>{v}</Tag> },
-        { title: '版本', dataIndex: 'version' },
-        { title: '作者', dataIndex: 'author' },
-        { title: '描述', dataIndex: 'description', ellipsis: true },
-        { title: '状态', dataIndex: 'status', render: (v: string, r: any) => (
-          <Switch checked={v === 'active'} onChange={() => toggleMutation.mutate(r.id)} size="small" checkedChildren="启用" unCheckedChildren="禁用" />
+        { title: '名称', dataIndex: 'name', width: 160, render: (v: string, r: any) => <Space size={4}><ApiOutlined /><Text strong ellipsis style={{ maxWidth: 100 }}>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
+        { title: '分类', dataIndex: 'category', width: 90, render: (v: string) => <Tag>{v}</Tag> },
+        { title: '版本', dataIndex: 'version', width: 80 },
+        { title: '作者', dataIndex: 'author', width: 80, ellipsis: true },
+        { title: '描述', dataIndex: 'description', width: 160, ellipsis: true },
+        { title: '状态', dataIndex: 'status', width: 100, render: (v: string, r: any) => (
+          <Switch checked={v === 'active'} onChange={() => toggleMutation.mutate(r.id)} size="small" />
         )},
-        { title: '创建时间', dataIndex: 'created_at', render: (v: string) => new Date(v).toLocaleDateString('zh-CN') },
-        { title: '操作', key: 'action', render: (_: any, r: any) => (
-          <Space>
-            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(r)}>编辑</Button>
-            <Button type="link" size="small" onClick={() => setDetailId(r.id)}>配置</Button>
-            <Popconfirm title="确定删除？" onConfirm={() => deleteMutation.mutate(r.id)}><Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button></Popconfirm>
-          </Space>
-        )},
+        { title: '创建时间', dataIndex: 'created_at', width: 110, render: (v: string) => new Date(v).toLocaleDateString('zh-CN') },
+        {
+          title: '操作', key: 'action', width: 150, fixed: 'right' as const,
+          render: (_: any, r: any) => (
+            <Space size={0}>
+              <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(r)} />
+              <Button type="link" size="small" onClick={() => setDetailId(r.id)}>配置</Button>
+              <Popconfirm title="确定删除？" onConfirm={() => deleteMutation.mutate(r.id)}>
+                <Button type="link" size="small" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </Space>
+          ),
+        },
       ]
     : [
         { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
@@ -244,7 +249,7 @@ function MCPTab() {
       </div>
 
       <Card>
-        <Table dataSource={data || []} rowKey="id" loading={isLoading} pagination={{ pageSize: 20 }} columns={cols} />
+        <Table dataSource={data || []} rowKey="id" loading={isLoading} pagination={{ pageSize: 20 }} columns={cols} scroll={{ x: 980 }} size="small" />
       </Card>
 
       <Modal title={editId ? '编辑 MCP 工具' : '创建 MCP 工具'} open={modalOpen} onCancel={() => { setModalOpen(false); setEditId(null); form.resetFields(); }}
