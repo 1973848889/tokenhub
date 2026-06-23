@@ -34,8 +34,6 @@ const allMenuItems = [
         children: [
           { key: '/agent-marketplace', icon: <RobotOutlined />, label: '专家市场' },
           { key: '/skill-repository', icon: <ApiOutlined />, label: '技能仓库' },
-          { key: '/connector-manager', icon: <ApiOutlined />, label: '连接器管理' },
-          { key: '/mcp-management', icon: <ApiOutlined />, label: 'MCP 工具管理' },
         ],
       },
     ],
