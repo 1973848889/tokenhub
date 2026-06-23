@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, Segmented, Spin } from 'antd';
-import { SecurityScanOutlined, ScanOutlined } from '@ant-design/icons';
 import { useSafetyOverview, useSafetyLogs } from '@/hooks/useSafety';
 import { usePermission } from '@/hooks/usePermission';
+import { SecurityScanOutlined, ScanOutlined, FileProtectOutlined } from '@ant-design/icons';
 
 const OverviewTab = dynamic(() => import('@/components/safety/OverviewTab'), { ssr: false, loading: () => <Card loading style={{ minHeight: 400 }} /> });
 const AssetTab = dynamic(() => import('@/components/safety/AssetTab'), { ssr: false, loading: () => <Spin style={{ display: 'block', padding: 48, textAlign: 'center' }} /> });
+const FilingTab = dynamic(() => import('@/components/safety/FilingTab'), { ssr: false, loading: () => <Spin style={{ display: 'block', padding: 48, textAlign: 'center' }} /> });
 
 export default function SafetyPage() {
   const { isAdmin } = usePermission();
@@ -27,12 +28,14 @@ export default function SafetyPage() {
           options={[
             { label: '运行安全', value: 'overview', icon: <SecurityScanOutlined /> },
             { label: '资产安全', value: 'asset', icon: <ScanOutlined /> },
+            { label: '模型备案', value: 'filing', icon: <FileProtectOutlined /> },
           ]}
         />
       </div>
 
       {activeTab === 'overview' && <OverviewTab overview={overview} isLoading={isLoading} logs={logs} resultFilter={resultFilter} setResultFilter={setResultFilter} page={page} setPage={setPage} />}
       {activeTab === 'asset' && <AssetTab />}
+      {activeTab === 'filing' && <FilingTab />}
     </div>
   );
 }

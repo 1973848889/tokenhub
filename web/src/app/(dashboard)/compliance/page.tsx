@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, Tabs, Descriptions, Table, Tag, Button, DatePicker, Space, Row, Col, Statistic, Spin, Empty, Typography, Alert, Input } from 'antd';
-import { SafetyCertificateOutlined, AuditOutlined, FileProtectOutlined, SearchOutlined } from '@ant-design/icons';
+import { SafetyCertificateOutlined, AuditOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -32,7 +32,6 @@ export default function CompliancePage() {
         <Tabs activeKey={activeTab} onChange={setActiveTab} tabBarStyle={{ padding: '0 24px' }}>
           <Tabs.TabPane tab={<span><AuditOutlined /> AI使用台账</span>} key="usage_ledger"><UsageLedgerTab queryParams={queryParams} /></Tabs.TabPane>
           <Tabs.TabPane tab={<span><SafetyCertificateOutlined /> 安全审计</span>} key="safety_audit"><SafetyAuditTab queryParams={queryParams} /></Tabs.TabPane>
-          <Tabs.TabPane tab={<span><FileProtectOutlined /> 模型备案</span>} key="algorithm_filing"><FilingTab /></Tabs.TabPane>
           <Tabs.TabPane tab={<span><SearchOutlined /> 审计追溯</span>} key="audit_trace"><AuditTraceTab /></Tabs.TabPane>
         </Tabs>
       </Card>
@@ -82,23 +81,6 @@ function SafetyAuditTab({ queryParams }: any) {
           <Tag key={cat.category} color={RISK_COLORS[cat.category]}>{RISK_LABELS[cat.category]}: {cat.count}次</Tag>
         ))}
       </Card>
-    </div>
-  );
-}
-
-function FilingTab() {
-  const { data, isLoading } = useQuery<any>({ queryKey: ['compliance', { type: 'algorithm_filing' }], queryFn: async () => { const { data } = await apiClient.get('/api/v1/admin/compliance/report', { params: { type: 'algorithm_filing' } }); return data; } });
-  if (isLoading) return <Spin style={{ padding: 40 }} />;
-
-  return (
-    <div style={{ padding: 24 }}><Alert message="根据《生成式AI管理办法》完成备案" type="info" showIcon style={{ marginBottom: 16 }} />
-      <Table dataSource={data?.models} rowKey="name" size="small" pagination={false}
-        columns={[
-          { title: '模型', dataIndex: 'name' }, { title: '版本', dataIndex: 'version' }, { title: '用途', dataIndex: 'purpose' },
-          { title: '备案', dataIndex: 'is_filed', render: (v: boolean) => v ? <Tag color="green">已备案</Tag> : <Tag color="orange">未备案</Tag> },
-          { title: '时间', dataIndex: 'filing_date', render: (v: string) => v || '-' },
-        ]}
-      />
     </div>
   );
 }
