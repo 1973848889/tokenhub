@@ -5,7 +5,7 @@ import { PlaceholderPage } from '../PlaceholderPage';
 describe('PlaceholderPage', () => {
   it('should render with billing title', () => {
     render(<PlaceholderPage pageKey="billing" />);
-    expect(screen.getByText('账单管理')).toBeInTheDocument();
+    expect(screen.getByText('运营管理')).toBeInTheDocument();
     expect(screen.getByText('功能开发中，敬请期待...')).toBeInTheDocument();
   });
 
