@@ -3,19 +3,21 @@
 import React, { useEffect, useState } from 'react';
 import {
   Card, Table, Tag, Switch, Descriptions, Typography, Space, Badge,
-  Form, InputNumber, Button, message, Spin, Empty, Segmented, Input, Modal, Select, Slider,
+  Form, InputNumber, Button, message, Spin, Empty, Segmented, Input, Modal, Select, Slider, Upload,
 } from 'antd';
 import {
   SafetyCertificateOutlined, ExperimentOutlined, StopOutlined, ScanOutlined,
   SaveOutlined, EditOutlined, CheckCircleOutlined, CloseCircleOutlined,
   ClockCircleOutlined, SettingOutlined, HistoryOutlined, PlusOutlined, DeleteOutlined,
   ThunderboltOutlined, SearchOutlined, AuditOutlined, ApiOutlined, ReloadOutlined,
+  UploadOutlined, FileExcelOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePermission } from '@/hooks/usePermission';
 import apiClient from '@/lib/api-client';
 import { RISK_COLORS, RISK_LABELS } from '@/lib/constants';
 import { Popconfirm } from 'antd';
+import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
 
@@ -112,20 +114,11 @@ function SensitiveWordsTab() {
     { word: '诈骗', category: 'fraud', level: 'block' },
     { word: '广告', category: 'spam', level: 'warn' },
   ]);
-  const [newWord, setNewWord] = useState('');
-  const [newCat, setNewCat] = useState('political');
-  const [newLevel, setNewLevel] = useState('block');
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
-
-  const addWord = () => {
-    const trimmed = newWord.trim();
-    if (!trimmed) { message.warning('请输入敏感词'); return; }
-    if (words.find(w => w.word === trimmed)) { message.warning('该敏感词已存在'); return; }
-    setWords(prev => [...prev, { word: trimmed, category: newCat, level: newLevel }]);
-    setNewWord('');
-    message.success('已添加');
-  };
+  const [importMode, setImportMode] = useState<'text' | 'excel'>('excel');
+  const [excelData, setExcelData] = useState<Array<{ word: string; category: string; level: string }>>([]);
+  const [excelFile, setExcelFile] = useState<string>('');
 
   const handleBatchImport = () => {
     if (!importText.trim()) { message.warning('请输入要导入的敏感词'); return; }
@@ -147,14 +140,91 @@ function SensitiveWordsTab() {
     message.success(`已导入 ${added} 个敏感词`);
   };
 
+  const handleExcelFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+        if (rows.length === 0) {
+          message.warning('Excel 文件为空');
+          return;
+        }
+
+        const firstRow = String(rows[0][0] || '');
+        const hasHeader = firstRow.includes('敏感词') || firstRow.includes('word') || firstRow === '词汇';
+
+        const startRow = hasHeader ? 1 : 0;
+        const parsed: Array<{ word: string; category: string; level: string }> = [];
+
+        const catMap: Record<string, string> = {
+          '涉政': 'political', '政治': 'political', 'political': 'political',
+          '色情': 'porn', 'porn': 'porn',
+          '暴力': 'violence', 'violence': 'violence',
+          '赌博': 'gambling', 'gambling': 'gambling',
+          '违禁品': 'drug', 'drug': 'drug',
+          '诈骗': 'fraud', 'fraud': 'fraud',
+          '广告': 'spam', '垃圾': 'spam', 'spam': 'spam',
+          '辱骂': 'abuse', 'abuse': 'abuse',
+        };
+
+        for (let i = startRow; i < rows.length; i++) {
+          const row = rows[i];
+          const word = String(row[0] || '').trim();
+          if (!word) continue;
+          const rawCat = String(row[1] || '').trim();
+          const rawLevel = String(row[2] || '').trim();
+
+          const category = catMap[rawCat] || (RISK_LABELS[rawCat] ? rawCat : 'political');
+          const level = rawLevel === '告警' || rawLevel === 'warn' ? 'warn' : 'block';
+
+          if (!words.find(w => w.word === word)) {
+            parsed.push({ word, category, level });
+          }
+        }
+
+        if (parsed.length === 0) {
+          message.warning('未解析到有效的敏感词数据（或全部已存在）');
+          return;
+        }
+
+        setExcelData(parsed);
+        setExcelFile(file.name);
+        message.success(`已从 Excel 解析 ${parsed.length} 个词条，请确认后导入`);
+      } catch {
+        message.error('Excel 文件解析失败，请检查文件格式');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    return false;
+  };
+
+  const confirmExcelImport = () => {
+    if (excelData.length === 0) { message.warning('没有可导入的数据'); return; }
+    setWords(prev => [...prev, ...excelData]);
+    const count = excelData.length;
+    setExcelData([]);
+    setExcelFile('');
+    setImportOpen(false);
+    message.success(`已从 Excel 导入 ${count} 个敏感词`);
+  };
+
+  const resetImport = () => {
+    setExcelData([]);
+    setExcelFile('');
+    setImportText('');
+    setImportMode('excel');
+    setImportOpen(false);
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Input placeholder="输入敏感词" value={newWord} onChange={(e) => setNewWord(e.target.value)} onPressEnter={addWord} style={{ width: 160 }} />
-        <Select value={newCat} onChange={setNewCat} style={{ width: 120 }} options={Object.entries(RISK_LABELS).map(([k, v]) => ({ value: k, label: v }))} />
-        <Select value={newLevel} onChange={setNewLevel} style={{ width: 100 }} options={[{ value: 'block', label: '拦截' }, { value: 'warn', label: '告警' }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => addWord()}>添加</Button>
-        <Button icon={<SearchOutlined />} onClick={() => setImportOpen(true)}>批量导入</Button>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Button icon={<PlusOutlined />} onClick={() => { setImportMode('excel'); setImportOpen(true); }}>新增</Button>
       </div>
       <Table dataSource={words} rowKey="word" pagination={false} size="middle"
         columns={[
@@ -168,13 +238,64 @@ function SensitiveWordsTab() {
           )},
         ]}
       />
-      <Modal title="批量导入敏感词" open={importOpen} onCancel={() => { setImportOpen(false); setImportText(''); }} onOk={handleBatchImport} okText="导入" width={560}>
-        <div style={{ marginTop: 8 }}>
-          <Text type="secondary">每行一个词条，格式：敏感词,分类,级别</Text>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>例如：违禁品,drug,block（分类和级别可选，默认为 涉政/拦截）</Text>
-          <Input.TextArea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)}
-            placeholder={`违禁品,drug,block\n色情内容,porn,block\n广告推广,spam,warn`} />
-        </div>
+      <Modal title="新增敏感词" open={importOpen} onCancel={resetImport} width={680}
+        footer={importMode === 'excel' && excelData.length > 0 ? [
+          <Button key="cancel" onClick={resetImport}>取消</Button>,
+          <Button key="import" type="primary" icon={<PlusOutlined />} onClick={confirmExcelImport}>确认导入 ({excelData.length} 条)</Button>,
+        ] : importMode === 'text' ? [
+          <Button key="cancel" onClick={resetImport}>取消</Button>,
+          <Button key="import" type="primary" onClick={handleBatchImport}>导入</Button>,
+        ] : [
+          <Button key="cancel" onClick={resetImport}>取消</Button>,
+        ]}
+      >
+        <Segmented value={importMode} onChange={(v) => { setImportMode(v as 'text' | 'excel'); setExcelData([]); setExcelFile(''); setImportText(''); }}
+          options={[
+            { label: 'Excel 导入', value: 'excel', icon: <FileExcelOutlined /> },
+            { label: '文本导入', value: 'text', icon: <EditOutlined /> },
+          ]}
+          style={{ marginBottom: 16 }}
+        />
+
+        {importMode === 'excel' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Text type="secondary">支持 .xlsx / .xls 格式，第一行可作为标题行（也会自动识别无标题的纯数据表）</Text>
+            <Text type="secondary">Excel 表头示例：<Tag>敏感词</Tag><Tag>分类</Tag><Tag>级别</Tag>（分类支持中文如"涉政/色情/暴力"或英文如"political/porn"）</Text>
+
+            <Upload.Dragger
+              accept=".xlsx,.xls"
+              maxCount={1}
+              beforeUpload={handleExcelFile}
+              onRemove={() => { setExcelData([]); setExcelFile(''); }}
+              fileList={excelFile ? [{ uid: '-1', name: excelFile, status: 'done' }] : []}
+            >
+              <p className="ant-upload-drag-icon"><FileExcelOutlined style={{ fontSize: 36, color: '#52c41a' }} /></p>
+              <p className="ant-upload-text">点击或拖拽 Excel 文件到此区域</p>
+              <p className="ant-upload-hint">支持 .xlsx / .xls 格式</p>
+            </Upload.Dragger>
+
+            {excelData.length > 0 && (
+              <Card size="small" title={`解析预览 (${excelData.length} 条)`}>
+                <Table dataSource={excelData} rowKey="word" pagination={false} size="small" scroll={{ y: 240 }}
+                  columns={[
+                    { title: '敏感词', dataIndex: 'word' },
+                    { title: '分类', dataIndex: 'category', render: (v: string) => <Tag color={RISK_COLORS[v] || 'default'}>{RISK_LABELS[v] || v}</Tag> },
+                    { title: '级别', dataIndex: 'level', render: (v: string) => <Tag color={v === 'block' ? 'red' : 'orange'}>{v === 'block' ? '拦截' : '告警'}</Tag> },
+                  ]}
+                />
+              </Card>
+            )}
+          </div>
+        )}
+
+        {importMode === 'text' && (
+          <div>
+            <Text type="secondary">每行一个词条，格式：敏感词,分类,级别</Text>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>例如：违禁品,drug,block（分类和级别可选，默认为 涉政/拦截）</Text>
+            <Input.TextArea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)}
+              placeholder={`违禁品,drug,block\n色情内容,porn,block\n广告推广,spam,warn`} />
+          </div>
+        )}
       </Modal>
     </div>
   );
