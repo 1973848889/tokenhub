@@ -119,9 +119,12 @@ function SensitiveWordsTab() {
   const [importText, setImportText] = useState('');
 
   const addWord = () => {
-    if (!newWord.trim()) { message.warning('请输入敏感词'); return; }
-    setWords([...words, { word: newWord.trim(), category: newCat, level: newLevel }]);
-    setNewWord(''); message.success('已添加');
+    const trimmed = newWord.trim();
+    if (!trimmed) { message.warning('请输入敏感词'); return; }
+    if (words.find(w => w.word === trimmed)) { message.warning('该敏感词已存在'); return; }
+    setWords(prev => [...prev, { word: trimmed, category: newCat, level: newLevel }]);
+    setNewWord('');
+    message.success('已添加');
   };
 
   const handleBatchImport = () => {
@@ -147,10 +150,10 @@ function SensitiveWordsTab() {
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Input placeholder="输入敏感词" value={newWord} onChange={(e) => setNewWord(e.target.value)} style={{ width: 160 }} />
+        <Input placeholder="输入敏感词" value={newWord} onChange={(e) => setNewWord(e.target.value)} onPressEnter={addWord} style={{ width: 160 }} />
         <Select value={newCat} onChange={setNewCat} style={{ width: 120 }} options={Object.entries(RISK_LABELS).map(([k, v]) => ({ value: k, label: v }))} />
         <Select value={newLevel} onChange={setNewLevel} style={{ width: 100 }} options={[{ value: 'block', label: '拦截' }, { value: 'warn', label: '告警' }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={addWord}>添加</Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => addWord()}>添加</Button>
         <Button icon={<SearchOutlined />} onClick={() => setImportOpen(true)}>批量导入</Button>
       </div>
       <Table dataSource={words} rowKey="word" pagination={false} size="middle"
