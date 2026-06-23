@@ -7,7 +7,7 @@ import {
 } from 'antd';
 import {
   SafetyCertificateOutlined, KeyOutlined, UserOutlined, TeamOutlined,
-  SaveOutlined, EditOutlined, AuditOutlined, ExperimentOutlined,
+  SaveOutlined, EditOutlined, ExperimentOutlined,
   CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
   SettingOutlined, HistoryOutlined, StopOutlined, PlusOutlined, DeleteOutlined,
 } from '@ant-design/icons';
@@ -31,7 +31,6 @@ export default function AccessControlPage() {
             options={[
               { label: '安全策略', value: 'security', icon: <SafetyCertificateOutlined /> },
               { label: 'API Key 策略', value: 'apikey', icon: <KeyOutlined /> },
-              { label: '越权检测', value: 'violation', icon: <AuditOutlined /> },
               { label: '沙箱管理', value: 'sandbox', icon: <ExperimentOutlined /> },
               { label: '敏感词库', value: 'words', icon: <StopOutlined /> },
               { label: 'DLP 规则', value: 'dlp', icon: <SafetyCertificateOutlined /> },
@@ -42,7 +41,6 @@ export default function AccessControlPage() {
         <div style={{ padding: 24 }}>
           {activeTab === 'security' && <SecurityPolicyTab />}
           {activeTab === 'apikey' && <APIKeyPolicyTab />}
-          {activeTab === 'violation' && <ViolationTab />}
           {activeTab === 'sandbox' && <SandboxTab />}
           {activeTab === 'words' && <SensitiveWordsTab />}
           {activeTab === 'dlp' && <DLPTab />}
@@ -151,30 +149,6 @@ function APIKeyPolicyTab() {
           <Descriptions.Item label="强制IP白名单"><Badge status={policies.require_ip_whitelist ? 'success' : 'default'} text={policies.require_ip_whitelist ? '是' : '否'} /></Descriptions.Item>
         </Descriptions>
       )}
-    </Card>
-  );
-}
-
-function ViolationTab() {
-  const violations = [
-    { id: 'v1', agent: '数据分析Agent', model: 'doubao-pro-256k', reason: 'Agent未被授权使用此模型', severity: 'high', time: '2026-06-18 14:30', status: 'blocked' },
-    { id: 'v2', agent: '代码审查Bot', model: 'kimi-latest', reason: '超出部门模型白名单范围', severity: 'high', time: '2026-06-18 14:15', status: 'blocked' },
-    { id: 'v3', agent: '客服Agent', model: 'deepseek-reasoner', reason: '推理模型仅限研发部使用', severity: 'medium', time: '2026-06-18 13:50', status: 'blocked' },
-    { id: 'v4', agent: '张三-代码生成', model: 'glm-5', reason: '正常授权', severity: 'low', time: '2026-06-18 13:20', status: 'passed' },
-  ];
-
-  return (
-    <Card title="越权检测日志">
-      <Table dataSource={violations} rowKey="id" pagination={false} size="middle"
-        columns={[
-          { title: '时间', dataIndex: 'time' },
-          { title: 'Agent/用户', dataIndex: 'agent' },
-          { title: '目标模型', dataIndex: 'model', render: (v: string) => <Tag>{v}</Tag> },
-          { title: '原因', dataIndex: 'reason' },
-          { title: '严重', dataIndex: 'severity', render: (v: string) => <Tag color={v === 'high' ? 'red' : v === 'medium' ? 'orange' : 'green'}>{v === 'high' ? '高危' : v === 'medium' ? '中危' : '低危'}</Tag> },
-          { title: '结果', dataIndex: 'status', render: (v: string) => <Tag color={v === 'blocked' ? 'red' : 'green'}>{v === 'blocked' ? '已拦截' : '通过'}</Tag> },
-        ]}
-      />
     </Card>
   );
 }
