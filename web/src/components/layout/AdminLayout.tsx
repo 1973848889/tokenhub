@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Badge, Button, Space, Typography } from 'antd';
 import {
   DashboardOutlined, DollarOutlined, KeyOutlined, ApiOutlined,
-  SafetyCertificateOutlined, RobotOutlined, AuditOutlined, SettingOutlined,
+  SafetyCertificateOutlined, RobotOutlined, SettingOutlined,
   BellOutlined, LogoutOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
   ThunderboltOutlined, ControlOutlined, FundOutlined,
 } from '@ant-design/icons';
@@ -48,7 +48,6 @@ const allMenuItems = [
     key: 'safety-group', icon: <SafetyCertificateOutlined />, label: '安全治理',
     children: [
       { key: '/safety', icon: <SafetyCertificateOutlined />, label: '运营安全' },
-      { key: '/compliance', icon: <AuditOutlined />, label: '合规报告' },
       { key: '/access-control', icon: <SafetyCertificateOutlined />, label: '安全配置' },
     ],
   },
