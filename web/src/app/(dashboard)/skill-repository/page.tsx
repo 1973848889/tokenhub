@@ -14,95 +14,37 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePermission } from '@/hooks/usePermission';
 import apiClient from '@/lib/api-client';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 const SKILL_CATEGORIES = ['办公效率','数据分析','文件处理','网络工具','开发工具','通信集成'];
-const CONN_CATEGORIES = ['办公效率','开发工具','通信集成','数据分析','文件处理'];
 
-// ==================== 技能仓库主页 ====================
 export default function SkillRepositoryPage() {
-  const { isAdmin } = usePermission();
-  const [tab, setTab] = useState('marketplace');
-
-  const tabOptions = [
-    { label: '技能市场', value: 'marketplace' },
-    { label: '已安装', value: 'installed' },
-    { label: '连接器', value: 'connectors' },
-    { label: 'MCP工具', value: 'mcp' },
-  ];
-  if (isAdmin) tabOptions.push({ label: '管理', value: 'manage' });
+  const [tab, setTab] = useState('skills');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>技能仓库</h1>
-        <Segmented value={tab} onChange={setTab} options={tabOptions} />
+        <Segmented value={tab} onChange={setTab}
+          options={[
+            { label: '技能仓库', value: 'skills' },
+            { label: '连接器', value: 'connectors' },
+            { label: 'MCP工具', value: 'mcp' },
+          ]}
+        />
       </div>
 
-      {tab === 'marketplace' && <MarketplaceTab />}
-      {tab === 'installed' && <InstalledTab />}
+      {tab === 'skills' && <SkillsTab />}
       {tab === 'connectors' && <ConnectorsTab />}
       {tab === 'mcp' && <MCPTab />}
-      {tab === 'manage' && isAdmin && <MCPManageTab />}
     </div>
   );
 }
 
-// ==================== 技能市场 ====================
-function MarketplaceTab() {
+// ==================== 技能仓库（技能市场 + 已安装） ====================
+function SkillsTab() {
+  const [subTab, setSubTab] = useState('marketplace');
   const [category, setCategory] = useState('');
-  const [search, setSearch] = useState('');
-  const queryClient = useQueryClient();
-
-  const { data } = useQuery({
-    queryKey: ['market', 'skills', category],
-    queryFn: async () => { const { data } = await apiClient.get('/api/v1/admin/market/skills', { params: { category: category || '' } }); return data.data; },
-  });
-
-  const installMutation = useMutation({ mutationFn: (id: string) => apiClient.post(`/api/v1/admin/market/skills/${id}/install`), onSuccess: () => { message.success('已安装'); queryClient.invalidateQueries({ queryKey: ['market','skills'] }); } });
-
-  const allSkills = data || [];
-  const filtered = search
-    ? allSkills.filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase()))
-    : allSkills;
-  const marketplace = filtered.filter((s: any) => !s.installed);
-
-  return (
-    <>
-      <Space wrap>
-        <Input.Search placeholder="搜索技能" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 200 }} prefix={<SearchOutlined />} />
-        <Tag color={category === '' ? 'blue' : 'default'} style={{ cursor: 'pointer', padding: '4px 12px', borderRadius: 16 }} onClick={() => setCategory('')}>全部</Tag>
-        {SKILL_CATEGORIES.map(c => (
-          <Tag key={c} color={category === c ? 'blue' : 'default'} style={{ cursor: 'pointer', padding: '4px 12px', borderRadius: 16 }} onClick={() => setCategory(c)}>{c}</Tag>
-        ))}
-      </Space>
-      <Row gutter={[16, 16]}>
-        {marketplace.map((skill: any) => (
-          <Col xs={24} sm={12} lg={8} key={skill.id}>
-            <Card size="small" hoverable style={{ borderRadius: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <Text strong>{skill.name}</Text>
-                  <Tag style={{ marginLeft: 8 }}>{skill.category}</Tag>
-                  {skill.is_official && <Tag color="gold">官方</Tag>}
-                </div>
-                <Button type="primary" size="small" icon={<DownloadOutlined />} onClick={() => installMutation.mutate(skill.id)}>安装</Button>
-              </div>
-              <Text type="secondary" style={{ fontSize: 12, display: 'block', margin: '8px 0' }} ellipsis>{skill.description}</Text>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span><StarFilled style={{ color: '#faad14', fontSize: 12 }} /> {skill.rating}</span>
-                <span style={{ fontSize: 12, color: '#8c8c8c' }}>{skill.downloads} 次下载</span>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-    </>
-  );
-}
-
-// ==================== 已安装 ====================
-function InstalledTab() {
   const [search, setSearch] = useState('');
   const [localSkills, setLocalSkills] = useState<any[]>([]);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -113,34 +55,72 @@ function InstalledTab() {
   const queryClient = useQueryClient();
 
   const { data } = useQuery({
-    queryKey: ['market', 'skills', ''],
-    queryFn: async () => { const { data } = await apiClient.get('/api/v1/admin/market/skills'); return data.data; },
+    queryKey: ['market', 'skills', category],
+    queryFn: async () => { const { data } = await apiClient.get('/api/v1/admin/market/skills', { params: { category: category || '' } }); return data.data; },
   });
 
+  const installMutation = useMutation({ mutationFn: (id: string) => apiClient.post(`/api/v1/admin/market/skills/${id}/install`), onSuccess: () => { message.success('已安装'); queryClient.invalidateQueries({ queryKey: ['market','skills'] }); } });
   const toggleMutation = useMutation({ mutationFn: (id: string) => apiClient.put(`/api/v1/admin/market/skills/${id}/toggle`), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['market','skills'] }); } });
   const uninstallMutation = useMutation({ mutationFn: (id: string) => apiClient.delete(`/api/v1/admin/market/skills/${id}`), onSuccess: () => { message.success('已卸载'); queryClient.invalidateQueries({ queryKey: ['market','skills'] }); } });
 
   const allSkills = [...(data || []), ...localSkills];
   const filtered = search
-    ? allSkills.filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()))
+    ? allSkills.filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase()))
     : allSkills;
+  const marketplace = filtered.filter((s: any) => !s.installed);
   const installed = filtered.filter((s: any) => s.installed);
 
   const handleUpload = () => {
     if (!uploadName.trim()) { message.warning('请输入技能名称'); return; }
     setLocalSkills([...localSkills, { id: `local-${Date.now()}`, name: uploadName, description: uploadDesc || '用户上传技能包', category: uploadCat, version: '1.0.0', author: '本地', is_official: false, downloads: 0, rating: 0, installed: true, enabled: true }]);
-    setUploadModalOpen(false);
-    setUploadName(''); setUploadDesc(''); setUploadCat('开发工具'); setFileList([]);
+    setUploadModalOpen(false); setUploadName(''); setUploadDesc(''); setUploadCat('开发工具'); setFileList([]);
     message.success('技能包已上传并安装');
   };
 
   return (
     <>
-      <Space wrap>
-        <Input.Search placeholder="搜索已安装技能" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 200 }} prefix={<SearchOutlined />} />
-        <Button type="primary" icon={<UploadOutlined />} onClick={() => setUploadModalOpen(true)}>上传技能</Button>
-      </Space>
-      {installed.length === 0 ? <Empty description="暂无已安装技能" /> : (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <Space wrap>
+          <Input.Search placeholder="搜索技能" value={search} onChange={(e) => setSearch(e.target.value)} allowClear style={{ width: 200 }} prefix={<SearchOutlined />} />
+          <Segmented value={subTab} onChange={setSubTab}
+            options={[
+              { label: `技能市场 (${marketplace.length})`, value: 'marketplace' },
+              { label: `已安装 (${installed.length})`, value: 'installed' },
+            ]}
+          />
+        </Space>
+        <Button icon={<UploadOutlined />} onClick={() => setUploadModalOpen(true)}>上传技能</Button>
+      </div>
+
+      {subTab === 'marketplace' && (
+        <>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <Tag color={category === '' ? 'blue' : 'default'} style={{ cursor: 'pointer', padding: '4px 12px', borderRadius: 16 }} onClick={() => setCategory('')}>全部</Tag>
+            {SKILL_CATEGORIES.map(c => (
+              <Tag key={c} color={category === c ? 'blue' : 'default'} style={{ cursor: 'pointer', padding: '4px 12px', borderRadius: 16 }} onClick={() => setCategory(c)}>{c}</Tag>
+            ))}
+          </div>
+          <Row gutter={[16, 16]}>
+            {marketplace.map((skill: any) => (
+              <Col xs={24} sm={12} lg={8} key={skill.id}>
+                <Card size="small" hoverable style={{ borderRadius: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div><Text strong>{skill.name}</Text><Tag style={{ marginLeft: 8 }}>{skill.category}</Tag>{skill.is_official && <Tag color="gold">官方</Tag>}</div>
+                    <Button type="primary" size="small" icon={<DownloadOutlined />} onClick={() => installMutation.mutate(skill.id)}>安装</Button>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 12, display: 'block', margin: '8px 0' }} ellipsis>{skill.description}</Text>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span><StarFilled style={{ color: '#faad14', fontSize: 12 }} /> {skill.rating}</span>
+                    <span style={{ fontSize: 12, color: '#8c8c8c' }}>{skill.downloads} 次下载</span>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+
+      {subTab === 'installed' && (installed.length === 0 ? <Empty description="暂无已安装技能" /> : (
         <Row gutter={[16, 16]}>
           {installed.map((skill: any) => (
             <Col xs={24} sm={12} lg={8} key={skill.id}>
@@ -163,7 +143,7 @@ function InstalledTab() {
             </Col>
           ))}
         </Row>
-      )}
+      ))}
 
       <Modal title="上传技能包" open={uploadModalOpen} onCancel={() => setUploadModalOpen(false)} onOk={handleUpload} okText="上传并安装" width={480}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 8 }}>
@@ -236,7 +216,6 @@ function ConnectorsTab() {
           </Col>
         ))}
       </Row>
-
       <Modal title="自定义 MCP 连接器" open={modalOpen} onCancel={() => { setModalOpen(false); form.resetFields(); }} onOk={handleCreate} okText="创建" width={560}>
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="name" label="连接器名称" rules={[{ required: true }]}><Input placeholder="如：Jira 项目管理" /></Form.Item>
@@ -253,47 +232,10 @@ function ConnectorsTab() {
   );
 }
 
-// ==================== MCP 工具（只读视图） ====================
+// ==================== MCP 工具（只读 + 管理） ====================
 function MCPTab() {
-  const [detailId, setDetailId] = useState<string | null>(null);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['mcp-tools'],
-    queryFn: async () => { const { data } = await apiClient.get('/api/v1/admin/market/mcp'); return data.data; },
-    staleTime: 60_000,
-    refetchOnWindowFocus: false,
-  });
-
-  return (
-    <>
-      <Card>
-        <Table dataSource={data || []} rowKey="id" loading={isLoading} pagination={{ pageSize: 20 }}
-          columns={[
-            { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
-            { title: '分类', dataIndex: 'category', render: (v: string) => <Tag>{v}</Tag> },
-            { title: '版本', dataIndex: 'version' },
-            { title: '作者', dataIndex: 'author' },
-            { title: '描述', dataIndex: 'description', ellipsis: true },
-            { title: '状态', dataIndex: 'status', render: (v: string) => <Badge status={v === 'active' ? 'success' : 'default'} text={v === 'active' ? '启用' : '禁用'} /> },
-            { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" size="small" onClick={() => setDetailId(r.id)}>查看配置</Button> },
-          ]}
-        />
-      </Card>
-
-      <Modal title="MCP 配置详情" open={!!detailId} onCancel={() => setDetailId(null)} footer={null} width={640}>
-        {detailId && data && (() => {
-          const tool = data.find((t: any) => t.id === detailId);
-          return tool ? <pre style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, maxHeight: 400, overflow: 'auto', fontSize: 13 }}>
-            {(() => { try { return JSON.stringify(JSON.parse(tool.config), null, 2); } catch { return tool.config; } })()}
-          </pre> : null;
-        })()}
-      </Modal>
-    </>
-  );
-}
-
-// ==================== MCP 管理（管理员 CRUD） ====================
-function MCPManageTab() {
+  const { isAdmin } = usePermission();
+  const [subTab, setSubTab] = useState('view');
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -328,34 +270,52 @@ function MCPManageTab() {
   const handleEdit = (tool: any) => { setEditId(tool.id); form.setFieldsValue(tool); setModalOpen(true); };
   const handleCreate = () => { setEditId(null); form.resetFields(); setModalOpen(true); };
 
+  const subTabOptions = [{ label: '工具列表', value: 'view' }];
+  if (isAdmin) subTabOptions.push({ label: '管理', value: 'manage' });
+
+  const cols = subTab === 'manage'
+    ? [
+        { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
+        { title: '分类', dataIndex: 'category', render: (v: string) => <Tag>{v}</Tag> },
+        { title: '版本', dataIndex: 'version' },
+        { title: '作者', dataIndex: 'author' },
+        { title: '描述', dataIndex: 'description', ellipsis: true },
+        { title: '状态', dataIndex: 'status', render: (v: string, r: any) => (
+          <Switch checked={v === 'active'} onChange={() => toggleMutation.mutate(r.id)} size="small" checkedChildren="启用" unCheckedChildren="禁用" />
+        )},
+        { title: '创建时间', dataIndex: 'created_at', render: (v: string) => new Date(v).toLocaleDateString('zh-CN') },
+        { title: '操作', key: 'action', render: (_: any, r: any) => (
+          <Space>
+            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(r)}>编辑</Button>
+            <Button type="link" size="small" onClick={() => setDetailId(r.id)}>配置</Button>
+            <Popconfirm title="确定删除？" onConfirm={() => deleteMutation.mutate(r.id)}><Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button></Popconfirm>
+          </Space>
+        )},
+      ]
+    : [
+        { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
+        { title: '分类', dataIndex: 'category', render: (v: string) => <Tag>{v}</Tag> },
+        { title: '版本', dataIndex: 'version' },
+        { title: '作者', dataIndex: 'author' },
+        { title: '描述', dataIndex: 'description', ellipsis: true },
+        { title: '状态', dataIndex: 'status', render: (v: string) => <Badge status={v === 'active' ? 'success' : 'default'} text={v === 'active' ? '启用' : '禁用'} /> },
+        { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" size="small" onClick={() => setDetailId(r.id)}>查看配置</Button> },
+      ];
+
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <Button icon={<ReloadOutlined />} onClick={() => qc.invalidateQueries({ queryKey: ['mcp-tools'] })}>刷新</Button>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>创建 MCP 工具</Button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <Segmented value={subTab} onChange={setSubTab} options={subTabOptions} />
+        {subTab === 'manage' && (
+          <Space>
+            <Button icon={<ReloadOutlined />} onClick={() => qc.invalidateQueries({ queryKey: ['mcp-tools'] })}>刷新</Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>创建 MCP 工具</Button>
+          </Space>
+        )}
       </div>
 
       <Card>
-        <Table dataSource={data || []} rowKey="id" loading={isLoading} pagination={{ pageSize: 20 }}
-          columns={[
-            { title: '名称', dataIndex: 'name', render: (v: string, r: any) => <Space><ApiOutlined /><Text strong>{v}</Text>{r.is_official && <Tag color="blue">官方</Tag>}</Space> },
-            { title: '分类', dataIndex: 'category', render: (v: string) => <Tag>{v}</Tag> },
-            { title: '版本', dataIndex: 'version' },
-            { title: '作者', dataIndex: 'author' },
-            { title: '描述', dataIndex: 'description', ellipsis: true },
-            { title: '状态', dataIndex: 'status', render: (v: string, r: any) => (
-              <Switch checked={v === 'active'} onChange={() => toggleMutation.mutate(r.id)} size="small" checkedChildren="启用" unCheckedChildren="禁用" />
-            )},
-            { title: '创建时间', dataIndex: 'created_at', render: (v: string) => new Date(v).toLocaleDateString('zh-CN') },
-            { title: '操作', key: 'action', render: (_: any, r: any) => (
-              <Space>
-                <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(r)}>编辑</Button>
-                <Button type="link" size="small" onClick={() => setDetailId(r.id)}>查看配置</Button>
-                <Popconfirm title="确定删除？" onConfirm={() => deleteMutation.mutate(r.id)}><Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button></Popconfirm>
-              </Space>
-            )},
-          ]}
-        />
+        <Table dataSource={data || []} rowKey="id" loading={isLoading} pagination={{ pageSize: 20 }} columns={cols} />
       </Card>
 
       <Modal title={editId ? '编辑 MCP 工具' : '创建 MCP 工具'} open={modalOpen} onCancel={() => { setModalOpen(false); setEditId(null); form.resetFields(); }}
