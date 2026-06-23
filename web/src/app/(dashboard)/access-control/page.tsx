@@ -115,11 +115,33 @@ function SensitiveWordsTab() {
   const [newWord, setNewWord] = useState('');
   const [newCat, setNewCat] = useState('political');
   const [newLevel, setNewLevel] = useState('block');
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState('');
 
   const addWord = () => {
-    if (!newWord) return;
-    setWords([...words, { word: newWord, category: newCat, level: newLevel }]);
+    if (!newWord.trim()) { message.warning('请输入敏感词'); return; }
+    setWords([...words, { word: newWord.trim(), category: newCat, level: newLevel }]);
     setNewWord(''); message.success('已添加');
+  };
+
+  const handleBatchImport = () => {
+    if (!importText.trim()) { message.warning('请输入要导入的敏感词'); return; }
+    const lines = importText.split('\n').filter(l => l.trim());
+    let added = 0;
+    const newWords = [...words];
+    lines.forEach(line => {
+      const parts = line.split(',').map(s => s.trim());
+      const word = parts[0];
+      const cat = parts[1] || 'political';
+      const level = parts[2] || 'block';
+      if (word && !newWords.find(w => w.word === word)) {
+        newWords.push({ word, category: cat, level });
+        added++;
+      }
+    });
+    setWords(newWords);
+    setImportOpen(false); setImportText('');
+    message.success(`已导入 ${added} 个敏感词`);
   };
 
   return (
@@ -129,7 +151,7 @@ function SensitiveWordsTab() {
         <Select value={newCat} onChange={setNewCat} style={{ width: 120 }} options={Object.entries(RISK_LABELS).map(([k, v]) => ({ value: k, label: v }))} />
         <Select value={newLevel} onChange={setNewLevel} style={{ width: 100 }} options={[{ value: 'block', label: '拦截' }, { value: 'warn', label: '告警' }]} />
         <Button type="primary" icon={<PlusOutlined />} onClick={addWord}>添加</Button>
-        <Button icon={<SearchOutlined />}>批量导入</Button>
+        <Button icon={<SearchOutlined />} onClick={() => setImportOpen(true)}>批量导入</Button>
       </div>
       <Table dataSource={words} rowKey="word" pagination={false} size="middle"
         columns={[
@@ -143,6 +165,14 @@ function SensitiveWordsTab() {
           )},
         ]}
       />
+      <Modal title="批量导入敏感词" open={importOpen} onCancel={() => { setImportOpen(false); setImportText(''); }} onOk={handleBatchImport} okText="导入" width={560}>
+        <div style={{ marginTop: 8 }}>
+          <Text type="secondary">每行一个词条，格式：敏感词,分类,级别</Text>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>例如：违禁品,drug,block（分类和级别可选，默认为 涉政/拦截）</Text>
+          <Input.TextArea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)}
+            placeholder={`违禁品,drug,block\n色情内容,porn,block\n广告推广,spam,warn`} />
+        </div>
+      </Modal>
     </div>
   );
 }
