@@ -37,14 +37,20 @@ export default function OverviewTab({ overview, isLoading, logs, resultFilter, s
 
       <Card title="风险分布" size="small">
         {overview?.risk_categories?.length > 0 ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {overview.risk_categories.map((cat: any) => (
-              <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Tag color={RISK_COLORS[cat.category] || 'default'}>{RISK_LABELS[cat.category] || cat.label}</Tag>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#262626' }}>{cat.count}次</span>
-                <span style={{ fontSize: 12, color: '#8c8c8c' }}>({cat.percentage.toFixed(1)}%)</span>
-              </div>
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {overview.risk_categories.map((cat: any) => {
+              const color = RISK_COLORS[cat.category] || '#8c8c8c';
+              const pct = Math.max(cat.percentage, 2);
+              return (
+                <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Tag color={color} style={{ margin: 0, flexShrink: 0 }}>{RISK_LABELS[cat.category] || cat.label}</Tag>
+                  <div style={{ flex: 1, minWidth: 60, height: 16, background: '#f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 8, transition: 'width 0.3s' }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#262626', whiteSpace: 'nowrap', flexShrink: 0 }}>{cat.count}次 ({cat.percentage.toFixed(1)}%)</span>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <span style={{ color: '#8c8c8c' }}>暂无风险数据</span>
