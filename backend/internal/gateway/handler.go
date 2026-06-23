@@ -418,7 +418,8 @@ func (h *Handler) SafetyLogs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 	result := c.Query("safety_result")
-	logs, total := safety.GetService().GetLogs(page, pageSize, result)
+	label := c.Query("label")
+	logs, total := safety.GetService().GetLogs(page, pageSize, result, label)
 	c.JSON(http.StatusOK, gin.H{"data": logs, "total": total, "page": page, "page_size": pageSize})
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Table, Tag, Segmented } from 'antd';
+import { Card, Row, Col, Table, Tag, Segmented, Select, Space } from 'antd';
 import { SafetyCertificateOutlined, StopOutlined, WarningOutlined, CheckCircleOutlined, SecurityScanOutlined } from '@ant-design/icons';
 import { formatNumber } from '@/lib/formatters';
 import { RISK_COLORS, RISK_LABELS } from '@/lib/constants';
@@ -12,11 +12,15 @@ interface Props {
   logs: any;
   resultFilter: string;
   setResultFilter: (v: string) => void;
+  labelFilter: string;
+  setLabelFilter: (v: string) => void;
   page: number;
   setPage: (p: number) => void;
 }
 
-export default function OverviewTab({ overview, isLoading, logs, resultFilter, setResultFilter, page, setPage }: Props) {
+const LABEL_OPTIONS = Object.entries(RISK_LABELS).map(([k, v]) => ({ value: k, label: v }));
+
+export default function OverviewTab({ overview, isLoading, logs, resultFilter, setResultFilter, labelFilter, setLabelFilter, page, setPage }: Props) {
   return (
     <>
       <Row gutter={[16, 16]}>
@@ -57,7 +61,12 @@ export default function OverviewTab({ overview, isLoading, logs, resultFilter, s
         )}
       </Card>
 
-      <Card title="检测记录" extra={<Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />}>
+      <Card title="检测记录" extra={
+        <Space size={12}>
+          <Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />
+          <Select placeholder="按标签筛选" value={labelFilter || undefined} onChange={(v) => { setLabelFilter(v || ''); setPage(1); }} allowClear style={{ width: 140 }} options={LABEL_OPTIONS} />
+        </Space>
+      }>
         <Table dataSource={logs?.data} rowKey="event_id" pagination={{ current: page, pageSize: 20, total: logs?.total ?? 0, onChange: setPage }} size="small"
           columns={[
             { title: '时间', dataIndex: 'timestamp', render: (v: string) => new Date(v).toLocaleTimeString('zh-CN') },

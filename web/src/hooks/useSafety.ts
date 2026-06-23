@@ -35,6 +35,7 @@ export interface SafetyLog {
 
 interface SafetyQuery {
   safety_result?: string;
+  label?: string;
   page?: number;
   page_size?: number;
 }

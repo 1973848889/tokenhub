@@ -204,7 +204,7 @@ func (s *Service) GetOverview() *SafetyOverview {
 	return o
 }
 
-func (s *Service) GetLogs(page, pageSize int, result string) ([]*SafetyLog, int) {
+func (s *Service) GetLogs(page, pageSize int, result, label string) ([]*SafetyLog, int) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -212,6 +212,18 @@ func (s *Service) GetLogs(page, pageSize int, result string) ([]*SafetyLog, int)
 	for _, log := range s.logs {
 		if result != "" && log.SafetyResult != result {
 			continue
+		}
+		if label != "" {
+			found := false
+			for _, l := range log.SafetyLabels {
+				if l == label {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
 		}
 		filtered = append(filtered, log)
 	}

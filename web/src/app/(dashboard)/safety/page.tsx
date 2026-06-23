@@ -15,10 +15,11 @@ export default function SafetyPage() {
   const { isAdmin } = usePermission();
   const [activeTab, setActiveTab] = useState('overview');
   const [resultFilter, setResultFilter] = useState('all');
+  const [labelFilter, setLabelFilter] = useState('');
   const [page, setPage] = useState(1);
 
   const { data: overview, isLoading } = useSafetyOverview();
-  const { data: logs } = useSafetyLogs({ safety_result: resultFilter === 'all' ? undefined : resultFilter, page, page_size: 20 });
+  const { data: logs } = useSafetyLogs({ safety_result: resultFilter === 'all' ? undefined : resultFilter, label: labelFilter || undefined, page, page_size: 20 });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -33,7 +34,7 @@ export default function SafetyPage() {
         />
       </div>
 
-      {activeTab === 'overview' && <OverviewTab overview={overview} isLoading={isLoading} logs={logs} resultFilter={resultFilter} setResultFilter={setResultFilter} page={page} setPage={setPage} />}
+      {activeTab === 'overview' && <OverviewTab overview={overview} isLoading={isLoading} logs={logs} resultFilter={resultFilter} setResultFilter={setResultFilter} labelFilter={labelFilter} setLabelFilter={setLabelFilter} page={page} setPage={setPage} />}
       {activeTab === 'asset' && <AssetTab />}
       {activeTab === 'filing' && <FilingTab />}
     </div>
