@@ -35,7 +35,23 @@ export default function OverviewTab({ overview, isLoading, logs, resultFilter, s
         ))}
       </Row>
 
-      <Card title="检测日志" extra={<Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />}>
+      <Card title="风险分布" size="small">
+        {overview?.risk_categories?.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {overview.risk_categories.map((cat: any) => (
+              <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Tag color={RISK_COLORS[cat.category] || 'default'}>{RISK_LABELS[cat.category] || cat.label}</Tag>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#262626' }}>{cat.count}次</span>
+                <span style={{ fontSize: 12, color: '#8c8c8c' }}>({cat.percentage.toFixed(1)}%)</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span style={{ color: '#8c8c8c' }}>暂无风险数据</span>
+        )}
+      </Card>
+
+      <Card title="检测记录" extra={<Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />}>
         <Table dataSource={logs?.data} rowKey="event_id" pagination={{ current: page, pageSize: 20, total: logs?.total ?? 0, onChange: setPage }} size="small"
           columns={[
             { title: '时间', dataIndex: 'timestamp', render: (v: string) => new Date(v).toLocaleTimeString('zh-CN') },
