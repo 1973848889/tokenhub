@@ -3,12 +3,11 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, Segmented, Spin } from 'antd';
-import { SecurityScanOutlined, ThunderboltOutlined, ScanOutlined } from '@ant-design/icons';
+import { SecurityScanOutlined, ScanOutlined } from '@ant-design/icons';
 import { useSafetyOverview, useSafetyLogs } from '@/hooks/useSafety';
 import { usePermission } from '@/hooks/usePermission';
 
 const OverviewTab = dynamic(() => import('@/components/safety/OverviewTab'), { ssr: false, loading: () => <Card loading style={{ minHeight: 400 }} /> });
-const GatewayTab = dynamic(() => import('@/components/safety/GatewayTab'), { ssr: false, loading: () => <Card loading style={{ minHeight: 400 }} /> });
 const AssetTab = dynamic(() => import('@/components/safety/AssetTab'), { ssr: false, loading: () => <Spin style={{ display: 'block', padding: 48, textAlign: 'center' }} /> });
 
 export default function SafetyPage() {
@@ -26,15 +25,13 @@ export default function SafetyPage() {
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>运营安全</h1>
         <Segmented value={activeTab} onChange={setActiveTab}
           options={[
-            { label: '安全概览', value: 'overview', icon: <SecurityScanOutlined /> },
-            { label: '安全网关', value: 'gateway', icon: <ThunderboltOutlined /> },
+            { label: '运行安全', value: 'overview', icon: <SecurityScanOutlined /> },
             { label: '资产安全', value: 'asset', icon: <ScanOutlined /> },
           ]}
         />
       </div>
 
       {activeTab === 'overview' && <OverviewTab overview={overview} isLoading={isLoading} logs={logs} resultFilter={resultFilter} setResultFilter={setResultFilter} page={page} setPage={setPage} />}
-      {activeTab === 'gateway' && <GatewayTab />}
       {activeTab === 'asset' && <AssetTab />}
     </div>
   );

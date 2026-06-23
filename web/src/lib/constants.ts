@@ -41,6 +41,7 @@ export const PROVIDER_COLORS: Record<string, string> = {
 };
 
 export const RISK_COLORS: Record<string, string> = {
+  // 内容安全（保留原有 + 新增5个）
   political: '#ef4444',
   porn: '#f97316',
   violence: '#eab308',
@@ -50,9 +51,27 @@ export const RISK_COLORS: Record<string, string> = {
   injection: '#8b5cf6',
   spam: '#94a3b8',
   abuse: '#ec4899',
+  fraud: '#dc2626',
+  terrorism: '#991b1b',
+  minor_harm: '#c2410c',
+  privacy: '#4338ca',
+  misinformation: '#71717a',
+  // 模型安全
+  prompt_leak: '#dc2626',
+  jailbreak: '#ea580c',
+  prompt_injection: '#7c3aed',
+  code_injection: '#4f46e5',
+  data_exfil: '#db2777',
+  model_abuse: '#64748b',
+  // 企业合规
+  export_control: '#475569',
+  gdpr: '#0891b2',
+  sox: '#059669',
+  hipaa: '#ca8a04',
 };
 
 export const RISK_LABELS: Record<string, string> = {
+  // 内容安全
   political: '涉政',
   porn: '色情',
   violence: '暴力',
@@ -62,6 +81,23 @@ export const RISK_LABELS: Record<string, string> = {
   injection: '注入攻击',
   spam: '垃圾广告',
   abuse: '辱骂',
+  fraud: '诈骗信息',
+  terrorism: '暴恐信息',
+  minor_harm: '未成年人保护',
+  privacy: '隐私泄露',
+  misinformation: '虚假信息',
+  // 模型安全
+  prompt_leak: '提示词泄露',
+  jailbreak: '越狱攻击',
+  prompt_injection: '提示注入',
+  code_injection: '代码注入',
+  data_exfil: '数据窃取',
+  model_abuse: '模型滥用',
+  // 企业合规
+  export_control: '出口管制',
+  gdpr: 'GDPR违规',
+  sox: '财务合规',
+  hipaa: '医疗隐私',
 };
 
 export const SCENE_TAGS = [
