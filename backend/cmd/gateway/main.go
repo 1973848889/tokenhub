@@ -22,6 +22,7 @@ import (
 	"github.com/tokenhub/backend/internal/agent"
 	"github.com/tokenhub/backend/internal/gateway"
 	"github.com/tokenhub/backend/internal/keygen"
+	_ "github.com/tokenhub/backend/internal/knowledge"
 	"github.com/tokenhub/backend/internal/ws"
 	"github.com/tokenhub/backend/pkg/config"
 )

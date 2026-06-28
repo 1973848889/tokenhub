@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"github.com/tokenhub/backend/internal/filter/safety"
 	"github.com/tokenhub/backend/internal/gateway/middleware"
 	"github.com/tokenhub/backend/internal/keygen"
+	"github.com/tokenhub/backend/internal/knowledge"
 	"github.com/tokenhub/backend/internal/marketplace"
 	"github.com/tokenhub/backend/internal/organization"
 	"github.com/tokenhub/backend/internal/router"
@@ -112,6 +114,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		admin.GET("/market/experts", h.ListMarketExperts)
 		admin.GET("/market/experts/:id", h.GetMarketExpert)
 		admin.POST("/market/experts/:id/subscribe", h.SubscribeExpert)
+		admin.POST("/market/experts/:id/publish", h.PublishExpert)
+		admin.POST("/market/experts/:id/unpublish", h.UnpublishExpert)
 		admin.GET("/market/skills", h.ListMarketSkills)
 		admin.POST("/market/skills/:id/install", h.InstallSkill)
 		admin.PUT("/market/skills/:id/toggle", h.ToggleSkill)
@@ -132,6 +136,13 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		admin.GET("/asset-scan/config", h.GetAssetScanConfig)
 		admin.PUT("/asset-scan/config", h.UpdateAssetScanConfig)
 		admin.GET("/asset-scan/skills", h.ListAssetScanSkills)
+		admin.GET("/knowledge/categories/list", h.ListKnowledgeCategories)
+		admin.POST("/knowledge/upload", h.UploadKnowledge)
+		admin.GET("/knowledge", h.ListKnowledge)
+		admin.GET("/knowledge/:id", h.GetKnowledge)
+		admin.PUT("/knowledge/:id", h.UpdateKnowledge)
+		admin.DELETE("/knowledge/:id", h.DeleteKnowledge)
+		admin.GET("/knowledge/:id/download", h.DownloadKnowledge)
 	}
 }
 
@@ -778,6 +789,22 @@ func (h *Handler) SubscribeExpert(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+func (h *Handler) PublishExpert(c *gin.Context) {
+	id := c.Param("id")
+	e := marketplace.GetService().GetExpert(id)
+	if e == nil { BadRequest(c, "expert not found"); return }
+	marketplace.GetService().PublishExpert(id)
+	c.JSON(http.StatusOK, gin.H{"status":"published","data":gin.H{"id":e.ID,"name":e.Name}})
+}
+
+func (h *Handler) UnpublishExpert(c *gin.Context) {
+	id := c.Param("id")
+	e := marketplace.GetService().GetExpert(id)
+	if e == nil { BadRequest(c, "expert not found"); return }
+	marketplace.GetService().UnpublishExpert(id)
+	c.JSON(http.StatusOK, gin.H{"status":"unpublished","data":gin.H{"id":e.ID,"name":e.Name}})
+}
+
 func (h *Handler) CreateMarketExpert(c *gin.Context) {
 	var req marketplace.CreateExpertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -1008,6 +1035,110 @@ func (h *Handler) Login(c *gin.Context) {
 			"role":  user.Role,
 		},
 	})
+}
+
+// ===== Knowledge Base =====
+
+func (h *Handler) UploadKnowledge(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		BadRequest(c, "请选择要上传的文件")
+		return
+	}
+
+	name := c.PostForm("name")
+	if name == "" {
+		BadRequest(c, "请输入知识库名称")
+		return
+	}
+	description := c.PostForm("description")
+	category := c.PostForm("category")
+
+	entry, err := knowledge.GetService().Create(name, description, category, file.Filename, file.Size)
+	if err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+
+	dst := knowledge.GetService().GetFilePath(entry.ID)
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		knowledge.GetService().Delete(entry.ID)
+		InternalError(c, "文件保存失败: "+err.Error())
+		return
+	}
+
+	agent.GetSecurityAgent().NotifyAssetChange("knowledge", entry.ID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "uploaded",
+		"data":   entry,
+	})
+}
+
+func (h *Handler) ListKnowledge(c *gin.Context) {
+	keyword := c.Query("keyword")
+	category := c.Query("category")
+	entries := knowledge.GetService().List(keyword, category)
+	c.JSON(http.StatusOK, gin.H{
+		"data":  entries,
+		"total": len(entries),
+	})
+}
+
+func (h *Handler) GetKnowledge(c *gin.Context) {
+	entry := knowledge.GetService().Get(c.Param("id"))
+	if entry == nil {
+		BadRequest(c, "知识条目不存在")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": entry})
+}
+
+func (h *Handler) UpdateKnowledge(c *gin.Context) {
+	var req struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Category    string `json:"category"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		BadRequest(c, "请求格式错误")
+		return
+	}
+
+	entry, err := knowledge.GetService().Update(c.Param("id"), req.Name, req.Description, req.Category)
+	if err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": entry})
+}
+
+func (h *Handler) DeleteKnowledge(c *gin.Context) {
+	if err := knowledge.GetService().Delete(c.Param("id")); err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
+}
+
+func (h *Handler) DownloadKnowledge(c *gin.Context) {
+	entry := knowledge.GetService().Get(c.Param("id"))
+	if entry == nil {
+		BadRequest(c, "知识条目不存在")
+		return
+	}
+
+	filePath := knowledge.GetService().GetFilePath(entry.ID)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		BadRequest(c, "文件不存在")
+		return
+	}
+
+	c.File(filePath)
+}
+
+func (h *Handler) ListKnowledgeCategories(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"data": knowledge.KnowledgeCategories})
 }
 
 // ===== Response Helpers =====

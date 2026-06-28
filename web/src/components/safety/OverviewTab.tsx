@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Row, Col, Table, Tag, Segmented, Select, Space } from 'antd';
 import { SafetyCertificateOutlined, StopOutlined, WarningOutlined, CheckCircleOutlined, SecurityScanOutlined } from '@ant-design/icons';
 import { formatNumber } from '@/lib/formatters';
@@ -21,6 +21,8 @@ interface Props {
 const LABEL_OPTIONS = Object.entries(RISK_LABELS).map(([k, v]) => ({ value: k, label: v }));
 
 export default function OverviewTab({ overview, isLoading, logs, resultFilter, setResultFilter, labelFilter, setLabelFilter, page, setPage }: Props) {
+  const [subTab, setSubTab] = useState('logs');
+
   return (
     <>
       <Row gutter={[16, 16]}>
@@ -39,46 +41,61 @@ export default function OverviewTab({ overview, isLoading, logs, resultFilter, s
         ))}
       </Row>
 
-      <Card title="风险分布" size="small">
-        {overview?.risk_categories?.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {overview.risk_categories.map((cat: any) => {
-              const color = RISK_COLORS[cat.category] || '#8c8c8c';
-              const pct = Math.max(cat.percentage, 2);
-              return (
-                <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Tag color={color} style={{ margin: 0, flexShrink: 0 }}>{RISK_LABELS[cat.category] || cat.label}</Tag>
-                  <div style={{ flex: 1, minWidth: 60, height: 16, background: '#f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 8, transition: 'width 0.3s' }} />
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#262626', whiteSpace: 'nowrap', flexShrink: 0 }}>{cat.count}次 ({cat.percentage.toFixed(1)}%)</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <span style={{ color: '#8c8c8c' }}>暂无风险数据</span>
-        )}
-      </Card>
+      <Card bodyStyle={{ padding: '16px 24px 0' }}>
+        <div style={{ padding: '0 0 16px' }}>
+          <Segmented value={subTab} onChange={(v) => setSubTab(v as string)}
+            options={[
+              { label: '检测记录', value: 'logs' },
+              { label: '风险分布', value: 'distribution' },
+            ]}
+          />
+        </div>
 
-      <Card title="检测记录" extra={
-        <Space size={12}>
-          <Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />
-          <Select placeholder="按标签筛选" value={labelFilter || undefined} onChange={(v) => { setLabelFilter(v || ''); setPage(1); }} allowClear style={{ width: 140 }} options={LABEL_OPTIONS} />
-        </Space>
-      }>
-        <Table dataSource={logs?.data} rowKey="event_id" pagination={{ current: page, pageSize: 20, total: logs?.total ?? 0, onChange: setPage }} size="small"
-          columns={[
-            { title: '时间', dataIndex: 'timestamp', render: (v: string) => new Date(v).toLocaleTimeString('zh-CN') },
-            { title: '用户', dataIndex: 'user_id' },
-            { title: '模型', dataIndex: 'model_name', render: (v: string) => <Tag>{v}</Tag> },
-            { title: '结果', dataIndex: 'safety_result', render: (v: string) => {
-              const m: any = { pass: ['green', '通过'], block: ['red', '拦截'], review: ['orange', '待审'] };
-              return <Tag color={m[v]?.[0]}>{m[v]?.[1] || v}</Tag>;
-            }},
-            { title: '标签', dataIndex: 'safety_labels', render: (v: string[]) => v?.map((l: string) => <Tag key={l} color={RISK_COLORS[l]}>{RISK_LABELS[l] || l}</Tag>) },
-          ]}
-        />
+        {subTab === 'logs' && (
+          <Card title="检测记录" extra={
+            <Space size={12}>
+              <Segmented value={resultFilter} onChange={(v: string) => { setResultFilter(v); setPage(1); }} options={[{ label: '全部', value: 'all' }, { label: '拦截', value: 'block' }, { label: '待审', value: 'review' }]} />
+              <Select placeholder="按标签筛选" value={labelFilter || undefined} onChange={(v) => { setLabelFilter(v || ''); setPage(1); }} allowClear style={{ width: 140 }} options={LABEL_OPTIONS} />
+            </Space>
+          } bodyStyle={{ padding: 0 }}>
+            <Table dataSource={logs?.data} rowKey="event_id" pagination={{ current: page, pageSize: 20, total: logs?.total ?? 0, onChange: setPage }} size="small"
+              columns={[
+                { title: '时间', dataIndex: 'timestamp', render: (v: string) => new Date(v).toLocaleTimeString('zh-CN') },
+                { title: '用户', dataIndex: 'user_id' },
+                { title: '模型', dataIndex: 'model_name', render: (v: string) => <Tag>{v}</Tag> },
+                { title: '结果', dataIndex: 'safety_result', render: (v: string) => {
+                  const m: any = { pass: ['green', '通过'], block: ['red', '拦截'], review: ['orange', '待审'] };
+                  return <Tag color={m[v]?.[0]}>{m[v]?.[1] || v}</Tag>;
+                }},
+                { title: '标签', dataIndex: 'safety_labels', render: (v: string[]) => v?.map((l: string) => <Tag key={l} color={RISK_COLORS[l]}>{RISK_LABELS[l] || l}</Tag>) },
+              ]}
+            />
+          </Card>
+        )}
+
+        {subTab === 'distribution' && (
+          <Card title="风险分布" size="small">
+            {overview?.risk_categories?.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {overview.risk_categories.map((cat: any) => {
+                  const color = RISK_COLORS[cat.category] || '#8c8c8c';
+                  const pct = Math.max(cat.percentage, 2);
+                  return (
+                    <div key={cat.category} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Tag color={color} style={{ margin: 0, flexShrink: 0 }}>{RISK_LABELS[cat.category] || cat.label}</Tag>
+                      <div style={{ flex: 1, minWidth: 60, height: 16, background: '#f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 8, transition: 'width 0.3s' }} />
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#262626', whiteSpace: 'nowrap', flexShrink: 0 }}>{cat.count}次 ({cat.percentage.toFixed(1)}%)</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <span style={{ color: '#8c8c8c' }}>暂无风险数据</span>
+            )}
+          </Card>
+        )}
       </Card>
     </>
   );

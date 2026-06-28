@@ -7,6 +7,7 @@ import {
 } from 'antd';
 import {
   StarFilled, UserAddOutlined, CopyOutlined, PlusOutlined, EditOutlined, DeleteOutlined,
+  SafetyCertificateOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePermission } from '@/hooks/usePermission';
@@ -169,6 +170,18 @@ function ManageTab() {
     onError: () => message.error('删除失败'),
   });
 
+  const publishMutation = useMutation({
+    mutationFn: (id: string) => apiClient.post(`/api/v1/admin/market/experts/${id}/publish`),
+    onSuccess: () => { message.success('已发布到专家市场'); queryClient.invalidateQueries({ queryKey: ['market','experts'] }); },
+    onError: () => message.error('发布失败'),
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: (id: string) => apiClient.post(`/api/v1/admin/market/experts/${id}/unpublish`),
+    onSuccess: () => { message.success('已下架'); queryClient.invalidateQueries({ queryKey: ['market','experts'] }); },
+    onError: () => message.error('下架失败'),
+  });
+
   const closeModal = () => { setModalOpen(false); setEditingId(null); form.resetFields(); };
   const handleCreate = () => { form.resetFields(); setEditingId(null); setModalOpen(true); };
   const handleEdit = (expert: any) => { form.setFieldsValue(expert); setEditingId(expert.id); setModalOpen(true); };
@@ -190,16 +203,37 @@ function ManageTab() {
             { title: '名称', dataIndex: 'name', width: 180, render: (v: string, r: any) => <><span style={{ marginRight: 6 }}>{r.avatar}</span>{v}</> },
             { title: '分类', dataIndex: 'category', width: 100, render: (v: string) => <Tag color="blue">{v}</Tag> },
             { title: '作者', dataIndex: 'author', width: 80 },
-            { title: '评分', dataIndex: 'rating', width: 80, render: (v: number) => v > 0 ? v.toFixed(1) : '-' },
+            { title: '检测', dataIndex: 'is_official', width: 80, render: (_v: boolean, r: any) => r.is_official ? <Tag color="success" icon={<SafetyCertificateOutlined />}>安全</Tag> : <Tag color="error" icon={<ExclamationCircleOutlined />}>风险</Tag> },
             { title: '使用', dataIndex: 'usage_count', width: 80 },
             { title: '官方', dataIndex: 'is_official', width: 70, render: (v: boolean) => v ? <Tag color="gold">官方</Tag> : <Tag>社区</Tag> },
-            { title: '订阅', dataIndex: 'subscribed', width: 70, render: (v: boolean) => v ? <Tag color="blue">已订阅</Tag> : <Tag>未订阅</Tag> },
+            { title: '发布', dataIndex: 'subscribed', width: 80, render: (v: boolean) => v ? <Tag color="blue">已发布</Tag> : <Tag>未发布</Tag> },
             { title: '创建时间', dataIndex: 'created_at', width: 110, render: (v: string) => new Date(v).toLocaleDateString('zh-CN') },
             {
-              title: '操作', key: 'actions', width: 120,
+              title: '操作', key: 'actions', width: 240,
               render: (_: any, r: any) => (
                 <Space>
                   <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(r)}>编辑</Button>
+                  {r.subscribed ? (
+                    <Popconfirm
+                      title="确定下架该专家？"
+                      description="下架后将移出专家市场"
+                      onConfirm={() => unpublishMutation.mutate(r.id)}
+                      okText="确定下架"
+                      cancelText="取消"
+                    >
+                      <Button type="link" size="small" danger>下架</Button>
+                    </Popconfirm>
+                  ) : (
+                    <Popconfirm
+                      title="确定发布该专家？"
+                      description="发布后将上架到专家市场，用户可订阅使用"
+                      onConfirm={() => publishMutation.mutate(r.id)}
+                      okText="确定发布"
+                      cancelText="取消"
+                    >
+                      <Button type="link" size="small" style={{ color: '#52c41a' }}>发布</Button>
+                    </Popconfirm>
+                  )}
                   <Popconfirm title="确定删除？" onConfirm={() => deleteMutation.mutate(r.id)}>
                     <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
                   </Popconfirm>

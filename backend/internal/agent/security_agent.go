@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/tokenhub/backend/internal/filter/safety"
+	"github.com/tokenhub/backend/internal/knowledge"
 	"github.com/tokenhub/backend/internal/marketplace"
 )
 
@@ -49,6 +50,7 @@ func defaultSkills() []SkillExecutor {
 		&PermissionAuditor{},
 		&ComplianceChecker{},
 		&SupplyChainScanner{},
+		&KnowledgeScanner{},
 	}
 }
 
@@ -144,6 +146,10 @@ func (sa *SecurityAgent) scanSingleAsset(assetType, assetID string) {
 	sa.mu.Lock()
 	sa.reports[assetID] = report
 	sa.mu.Unlock()
+
+	if assetType == "knowledge" {
+		sa.syncKnowledgeScanResult(assetID, report)
+	}
 }
 
 func (sa *SecurityAgent) scanAllAssets() {
@@ -214,6 +220,24 @@ func (sa *SecurityAgent) scanAllAssets() {
 		})
 	}
 
+	for _, e := range knowledge.GetService().ListForScan() {
+		cfg := map[string]interface{}{
+			"description": e.Description,
+			"file_name":   e.FileName,
+			"file_type":   e.FileType,
+			"file_size":   e.FileSize,
+			"status":      e.Status,
+		}
+		assets = append(assets, AssetInfo{
+			AssetID:   e.ID,
+			AssetType: "knowledge",
+			AssetName: e.Name,
+			Owner:     "系统",
+			Status:    e.Status,
+			Config:    cfg,
+		})
+	}
+
 	reports := make(map[string]*AssetScanReport)
 	for _, asset := range assets {
 		report := sa.runScan(asset)
@@ -230,6 +254,13 @@ func (sa *SecurityAgent) scanAllAssets() {
 		if report.OverallRisk == "risky" || report.OverallRisk == "blocked" {
 			summary := report.AssetName + " 安全扫描发现 " + strconv.Itoa(len(report.SkillResults)) + " 项风险"
 			sa.recordToSafetyLog(report.AssetID, report.AssetType, report.AssetName, summary, report)
+		}
+	}
+
+	for assetID, report := range reports {
+		asset := sa.findAssetByID(assetID, assets)
+		if asset != nil && asset.AssetType == "knowledge" {
+			sa.syncKnowledgeScanResult(assetID, report)
 		}
 	}
 
@@ -286,6 +317,20 @@ func (sa *SecurityAgent) buildAssetInfo(assetType, assetID string) *AssetInfo {
 				return &AssetInfo{AssetID: t.ID, AssetType: "mcp", AssetName: t.Name, Owner: t.Author, Status: t.Status, Config: cfg}
 			}
 		}
+
+	case "knowledge":
+		e := knowledge.GetService().Get(assetID)
+		if e == nil {
+			return nil
+		}
+		cfg := map[string]interface{}{
+			"description": e.Description,
+			"file_name":   e.FileName,
+			"file_type":   e.FileType,
+			"file_size":   e.FileSize,
+			"status":      e.Status,
+		}
+		return &AssetInfo{AssetID: e.ID, AssetType: "knowledge", AssetName: e.Name, Owner: "系统", Status: e.Status, Config: cfg}
 	}
 	return nil
 }
@@ -598,4 +643,40 @@ func (sa *SecurityAgent) seedDemoReports() {
 
 func (sa *SecurityAgent) ListSkills() []SkillExecutor {
 	return sa.skills
+}
+
+func (sa *SecurityAgent) syncKnowledgeScanResult(assetID string, report *AssetScanReport) {
+	findings := make([]knowledge.Finding, 0)
+	for _, r := range report.SkillResults {
+		for _, f := range r.Findings {
+			findings = append(findings, knowledge.Finding{
+				Dimension:   f.Dimension,
+				Severity:    f.Severity,
+				Title:       f.Title,
+				Description: f.Description,
+			})
+		}
+	}
+
+	status := "safe"
+	if report.OverallRisk == "blocked" {
+		status = "blocked"
+	} else if report.OverallRisk == "risky" {
+		status = "risky"
+	}
+
+	knowledge.GetService().UpdateScanResult(assetID, status, &knowledge.ScanResult{
+		ScannedAt: time.Now(),
+		RiskLevel: report.OverallRisk,
+		Findings:  findings,
+	})
+}
+
+func (sa *SecurityAgent) findAssetByID(assetID string, assets []AssetInfo) *AssetInfo {
+	for _, a := range assets {
+		if a.AssetID == assetID {
+			return &a
+		}
+	}
+	return nil
 }

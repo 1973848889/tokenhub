@@ -111,6 +111,10 @@ func (s *Service) GetExpert(id string) *Expert { s.mu.RLock(); defer s.mu.RUnloc
 
 func (s *Service) SubscribeExpert(id string) { s.mu.Lock(); defer s.mu.Unlock(); if e, ok := s.experts[id]; ok { e.Subscribed = !e.Subscribed } }
 
+func (s *Service) PublishExpert(id string) { s.mu.Lock(); defer s.mu.Unlock(); if e, ok := s.experts[id]; ok { e.Subscribed = true } }
+
+func (s *Service) UnpublishExpert(id string) { s.mu.Lock(); defer s.mu.Unlock(); if e, ok := s.experts[id]; ok { e.Subscribed = false } }
+
 func (s *Service) SetExpertApiKey(id, keyID, keyPrefix string) { s.mu.Lock(); defer s.mu.Unlock(); if e, ok := s.experts[id]; ok { e.ApiKeyID = keyID; e.ApiKeyPrefix = keyPrefix } }
 
 type CreateExpertRequest struct {

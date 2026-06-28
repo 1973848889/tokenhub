@@ -6,7 +6,7 @@ import {
   DashboardOutlined, DollarOutlined, KeyOutlined, ApiOutlined,
   SafetyCertificateOutlined, RobotOutlined, SettingOutlined,
   BellOutlined, LogoutOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined,
-  ThunderboltOutlined, ControlOutlined, FundOutlined,
+  ThunderboltOutlined, ControlOutlined, FundOutlined, BookOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -33,6 +33,12 @@ const allMenuItems = [
         children: [
           { key: '/agent-marketplace', icon: <RobotOutlined />, label: '专家市场' },
           { key: '/skill-repository', icon: <ApiOutlined />, label: '技能仓库' },
+        ],
+      },
+      {
+        key: 'knowledge-group', label: '知识库管理',
+        children: [
+          { key: '/knowledge', icon: <BookOutlined />, label: '知识库' },
         ],
       },
     ],
@@ -117,9 +123,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed} width={220} style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
         <div style={{ display: 'flex', alignItems: 'center', height: 64, padding: '0 16px', borderBottom: '1px solid #f0f0f0', gap: 10, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1677ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>TH</span>
-          </div>
           {!collapsed && <Text strong style={{ fontSize: 16, whiteSpace: 'nowrap' }}>企业AI治理智能平台</Text>}
         </div>
         <Menu

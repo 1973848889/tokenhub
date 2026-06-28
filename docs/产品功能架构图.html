@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokenhub — 企业AI治理智能平台 产品功能架构图</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 40px 20px; }
+h1 { text-align: center; font-size: 28px; color: #1a1a2e; margin-bottom: 8px; }
+.subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 36px; }
+
+.arch { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+/* Layer */
+.layer { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+.layer-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; color: #fff; font-size: 18px; font-weight: 700; }
+.layer-header .tag { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.25); font-weight: 400; }
+.layer-label { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; background: rgba(255,255,255,0.2); }
+
+.frontend   .layer-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.gateway    .layer-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.services   .layer-header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.data       .layer-header { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #1a1a2e; }
+.data       .layer-header .tag { background: rgba(0,0,0,0.12); color: #1a1a2e; }
+
+.layer-body { padding: 18px 20px; }
+
+/* Cards */
+.cards { display: flex; flex-wrap: wrap; gap: 12px; }
+.card { border: 1px solid #eee; border-radius: 10px; padding: 14px 16px; min-width: 170px; flex: 1 1 auto; transition: box-shadow 0.2s; }
+.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.card h4 { font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.card .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.card p { font-size: 12px; color: #666; line-height: 1.6; }
+
+.dot-purple { background: #7c3aed; }
+.dot-pink   { background: #ec4899; }
+.dot-blue   { background: #3b82f6; }
+.dot-cyan   { background: #06b6d4; }
+.dot-green  { background: #10b981; }
+.dot-orange { background: #f59e0b; }
+.dot-red    { background: #ef4444; }
+
+/* Arrow between layers */
+.arrow-down { text-align: center; color: #ccc; font-size: 20px; letter-spacing: 2px; }
+
+/* Flow indicator */
+.flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; padding: 10px 0; }
+.flow-item { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.flow-arrow { color: #aaa; font-size: 16px; }
+
+/* Footer */
+.footer { text-align: center; color: #aaa; font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<h1>Tokenhub 产品功能架构图</h1>
+<p class="subtitle">企业AI治理智能平台 — 全链路 AI 安全运营中台</p>
+
+<div class="arch">
+
+<!-- ===== 用户层 ===== -->
+<div class="layer frontend">
+  <div class="layer-header">
+    <div class="layer-label">1</div>
+    <span>用户接入层</span>
+    <span class="tag">React 19 · Next.js 15 · Ant Design 5</span>
+  </div>
+  <div class="layer-body">
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-purple"></span> 仪表盘</h4><p>消耗概览 / 模型分布<br>部门/用户排行 / 趋势图<br>实时告警(WebSocket)</p></div>
+      <div class="card"><h4><span class="dot dot-purple"></span> 模型方舟</h4><p>8厂商9模型聚合<br>智能路由推荐<br>场景识别体验场</p></div>
+      <div class="card"><h4><span class="dot dot-pink"></span> 智能体市场</h4><p>专家市场 / 技能仓库<br>连接器 / MCP工具<br>发布管理(上架/下架)</p></div>
+      <div class="card"><h4><span class="dot dot-pink"></span> 知识库管理</h4><p>文件上传/下载/CRUD<br>分类筛选(7类)<br>上传即安全扫描</p></div>
+      <div class="card"><h4><span class="dot dot-blue"></span> 安全治理</h4><p>安全概览 / 安全网关<br>敏感词库 / PII规则<br>注入防护 / 访问控制</p></div>
+      <div class="card"><h4><span class="dot dot-blue"></span> 安全配置</h4><p>沙箱审核队列/规则<br>资产扫描(Agent/Skill/MCP)<br>安全巡检Agent</p></div>
+      <div class="card"><h4><span class="dot dot-orange"></span> 账单管理</h4><p>多维度账单 / 导出<br>Agent排行榜<br>预算配置(5级+熔断)</p></div>
+      <div class="card"><h4><span class="dot dot-orange"></span> 组织管理</h4><p>组织 / 部门 / 用户<br>预算分配 / 密码管理<br>API Key 生命周期</p></div>
+    </div>
+    <div class="flow" style="margin-top:12px; font-size:12px; color:#999;">
+      10 个功能域 · 22 个页面路由 · 70+ API 端点
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ===== API 网关层 ===== -->
+<div class="layer gateway">
+  <div class="layer-header">
+    <div class="layer-label">2</div>
+    <span>API 网关层</span>
+    <span class="tag">Go 1.22 · Gin · WebSocket</span>
+  </div>
+  <div class="layer-body">
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-pink"></span> 认证鉴权</h4><p>JWT Token<br>4级角色(超管/部门/用户/审计)<br>SSO(LDAP/钉钉/企微/OAuth)</p></div>
+      <div class="card"><h4><span class="dot dot-pink"></span> 中间件</h4><p>CORS · 请求日志<br>JWT校验 · IP白名单<br>限流保护</p></div>
+      <div class="card"><h4><span class="dot dot-pink"></span> LLM 代理</h4><p>OpenAI兼容格式<br>/v1/chat/completions<br>/v1/models<br>流式 + 非流式</p></div>
+      <div class="card"><h4><span class="dot dot-pink"></span> WebSocket</h4><p>Dashboard实时推送<br>告警事件流<br>频道订阅</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ===== 核心服务层 ===== -->
+<div class="layer services">
+  <div class="layer-header">
+    <div class="layer-label">3</div>
+    <span>核心服务层</span>
+    <span class="tag">15 个后端模块 · Go 单例模式</span>
+  </div>
+  <div class="layer-body">
+    <!-- 供给侧 -->
+    <div style="margin-bottom:14px; font-size:14px; font-weight:700; color:#3b82f6;">▸ 供给侧 — 模型聚合与交付</div>
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-blue"></span> 模型适配器</h4><p>8厂商9模型统一接口<br>DeepSeek · 通义 · 豆包<br>GLM · Kimi · 文心 · 混元</p></div>
+      <div class="card"><h4><span class="dot dot-blue"></span> 智能路由引擎</h4><p>3策略(代价/质量/均衡)<br>fallback降级链<br>30s健康检查</p></div>
+      <div class="card"><h4><span class="dot dot-blue"></span> 模型推荐引擎</h4><p>8种场景关键词分类<br>代码/文档/客服/法律等<br>质量分/代价分/速度分</p></div>
+    </div>
+
+    <!-- 平台侧 -->
+    <div style="margin:16px 0 14px; font-size:14px; font-weight:700; color:#06b6d4;">▸ 平台侧 — 安全运营中枢</div>
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-cyan"></span> 计费引擎</h4><p>Token计价(输入/输出/缓存)<br>Redis Stream批量写入<br>CSV/JSON导出</p></div>
+      <div class="card"><h4><span class="dot dot-cyan"></span> 预算控制器</h4><p>5级预算体系<br>3态熔断器(normal→throttled→blocked)<br>Agent Guard(3规则)</p></div>
+      <div class="card"><h4><span class="dot dot-cyan"></span> 安全过滤引擎</h4><p>Aho-Corasick敏感词(14类)<br>PII检测脱敏(身份证/手机/邮箱)<br>注入检测(越狱/逃逸/泄露)</p></div>
+      <div class="card"><h4><span class="dot dot-cyan"></span> 安全网关</h4><p>6条DLP规则<br>统一身份认证<br>实时安全事件流</p></div>
+      <div class="card"><h4><span class="dot dot-cyan"></span> API Key 管理</h4><p>sk-tok-xxx格式<br>SHA256哈希存储<br>日预算/RPM/IP白名单</p></div>
+    </div>
+
+    <!-- 智能体侧 -->
+    <div style="margin:16px 0 14px; font-size:14px; font-weight:700; color:#10b981;">▸ 智能体侧 — Agent 安全治理</div>
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-green"></span> 安全巡检Agent</h4><p>5个扫描器<br>注入/权限/合规/供应链/知识库<br>事件驱动+定时全量</p></div>
+      <div class="card"><h4><span class="dot dot-green"></span> 资产扫描</h4><p>Agent · Skill · MCP · Knowledge<br>10s防抖异步扫描<br>安全/风险/拦截 三级评估</p></div>
+      <div class="card"><h4><span class="dot dot-green"></span> 沙箱审核</h4><p>Agent输出审核队列<br>自动审核规则<br>风险分级(critical→low)</p></div>
+      <div class="card"><h4><span class="dot dot-green"></span> 智能体市场</h4><p>专家 · 技能 · 连接器<br>MCP工具 · 发布/下架<br>API Key关联</p></div>
+      <div class="card"><h4><span class="dot dot-green"></span> 合规报告</h4><p>使用台账 / 安全审计<br>算法备案<br>CSV导出</p></div>
+    </div>
+
+    <!-- 消费侧 -->
+    <div style="margin:16px 0 14px; font-size:14px; font-weight:700; color:#f59e0b;">▸ 消费侧 — 企业内部治理</div>
+    <div class="cards">
+      <div class="card"><h4><span class="dot dot-orange"></span> 知识库服务</h4><p>7类知识分类<br>上传即安全扫描<br>safe/risky/blocked</p></div>
+      <div class="card"><h4><span class="dot dot-orange"></span> 组织管理</h4><p>组织→部门→用户<br>预算分配<br>密码重置</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">▼</div>
+
+<!-- ===== 数据层 ===== -->
+<div class="layer data">
+  <div class="layer-header">
+    <div class="layer-label">4</div>
+    <span>数据存储层</span>
+    <span class="tag">PostgreSQL · ClickHouse · Redis · 本地文件</span>
+  </div>
+  <div class="layer-body">
+    <div class="cards">
+      <div class="card" style="background:#f0fdf4;"><h4><span class="dot dot-green"></span> PostgreSQL</h4><p>organizations · departments<br>users · api_keys · projects<br>model_pricing · budget_configs<br>sensitive_words · compliance_reports</p></div>
+      <div class="card" style="background:#eff6ff;"><h4><span class="dot dot-blue"></span> ClickHouse</h4><p>call_events (调用事件)<br>call_events_hourly (物化视图)<br>call_events_daily (物化视图)<br>OLAP 聚合分析</p></div>
+      <div class="card" style="background:#fef3c7;"><h4><span class="dot dot-orange"></span> Redis</h4><p>预算Lua原子操作<br>Session / Token缓存<br>WebSocket Pub/Sub</p></div>
+      <div class="card" style="background:#fce7f3;"><h4><span class="dot dot-pink"></span> 本地文件存储</h4><p>知识库文件(data/knowledge)<br>SHA256 Key哈希<br>文件下载服务</p></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ===== 数据流说明 ===== -->
+<div style="max-width:1400px; margin: 24px auto; background:#fff; border-radius:12px; padding:20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+  <h3 style="font-size:16px; margin-bottom:14px; color:#1a1a2e;">🔄 核心数据流</h3>
+  <div class="cards">
+    <div class="card"><strong>AI 调用流</strong><p>客户端 → API网关(JWT) → 路由引擎 → 模型适配器 → LLM → 安全过滤器 → 计费引擎 → 返回响应</p></div>
+    <div class="card"><strong>安全扫描流</strong><p>资产变更事件 → NotifyAssetChange → 10s防抖 → 5扫描器并行 → 结果同步(知识库/安全日志)</p></div>
+    <div class="card"><strong>预算管控流</strong><p>API请求 → Redis Lua原子检查 → 3级阈值判断 → pass/alert/block → Agent Guard异常检测</p></div>
+    <div class="card"><strong>知识库安全流</strong><p>文件上传 → 创建条目(pending_scan) → SecurityAgent扫描 → 更新状态(safe/risky/blocked)</p></div>
+  </div>
+</div>
+
+<p class="footer">Tokenhub · 企业AI治理智能平台 · 2026</p>
+
+</body>
+</html>

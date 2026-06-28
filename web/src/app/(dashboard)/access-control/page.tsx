@@ -17,7 +17,6 @@ import { usePermission } from '@/hooks/usePermission';
 import apiClient from '@/lib/api-client';
 import { RISK_COLORS, RISK_LABELS } from '@/lib/constants';
 import { Popconfirm } from 'antd';
-import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
 
@@ -140,7 +139,8 @@ function SensitiveWordsTab() {
     message.success(`已导入 ${added} 个敏感词`);
   };
 
-  const handleExcelFile = (file: File) => {
+  const handleExcelFile = async (file: File) => {
+    const XLSX = await import('xlsx');
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
